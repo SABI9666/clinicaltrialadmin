@@ -3,6 +3,11 @@
 #   gcloud builds submit --config server/cloudbuild.yaml \
 #     --substitutions=_REGION=australia-southeast1,_SERVICE=clinical-trial-api
 #
+# Images are tagged with $BUILD_ID, which Cloud Build populates for manual
+# `gcloud builds submit` runs as well as trigger-invoked ones. $COMMIT_SHA is
+# only set for triggered builds and resolves to an empty string otherwise,
+# which would produce an invalid image tag.
+#
 # Secrets (JWT_SECRET, ADMIN_PASSWORD, DATABASE_URL) are read from Secret
 # Manager at deploy time and never baked into the image.
 #
@@ -24,7 +29,7 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 images:
-  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID'
 
 steps:
   - id: build
@@ -32,7 +37,7 @@ steps:
     args:
       - build
       - '-t'
-      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID'
       - '-t'
       - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest'
       - '-f'
@@ -50,7 +55,7 @@ steps:
       - run
       - deploy
       - '${_SERVICE}'
-      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID'
       - '--region=${_REGION}'
       - '--platform=managed'
       - '--allow-unauthenticated'

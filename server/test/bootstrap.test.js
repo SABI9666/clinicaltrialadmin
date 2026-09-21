@@ -101,4 +101,19 @@ describe('deployment config', () => {
       assert.ok(yaml.includes(name), `${name} must be wired up`);
     }
   });
+
+  test('tags images with a substitution that manual builds populate', async () => {
+    const yaml = await readFile('cloudbuild.yaml', 'utf8');
+    // $COMMIT_SHA and $SHORT_SHA are only set for trigger-invoked builds. A
+    // manual `gcloud builds submit` leaves them empty, yielding an image
+    // reference that ends in ':' and failing the push.
+    const tagRefs = [...yaml.matchAll(/\$\{?_SERVICE\}?:\$\{?(\w+)\}?/g)].map((m) => m[1]);
+    assert.ok(tagRefs.length >= 3, 'expected the image reference in build, push and deploy');
+    for (const ref of tagRefs) {
+      assert.ok(
+        !['COMMIT_SHA', 'SHORT_SHA', 'REVISION_ID', 'TAG_NAME', 'BRANCH_NAME'].includes(ref),
+        `image tag uses $${ref}, which is empty for manual builds`,
+      );
+    }
+  });
 });
