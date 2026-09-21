@@ -15,6 +15,10 @@ substitutions:
   _REPO: clinical-trial
   _GCS_BUCKET: ''
   _CORS_ORIGINS: ''
+  # Email for the first admin account. Created only on the very first deploy,
+  # while the user table is empty; ignored afterwards. Without it no admin is
+  # created and nobody can sign in.
+  _ADMIN_EMAIL: ''
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -55,5 +59,5 @@ steps:
       - '--max-instances=10'
       - '--memory=512Mi'
       - '--cpu=1'
-      - '--set-env-vars=NODE_ENV=production,USE_POSTGRES=true,USE_GCS=true,GCP_PROJECT_ID=$PROJECT_ID,GCS_BUCKET=${_GCS_BUCKET},CORS_ORIGINS=${_CORS_ORIGINS}'
+      - '--set-env-vars=NODE_ENV=production,USE_POSTGRES=true,USE_GCS=true,GCP_PROJECT_ID=$PROJECT_ID,GCS_BUCKET=${_GCS_BUCKET},CORS_ORIGINS=${_CORS_ORIGINS},ADMIN_EMAIL=${_ADMIN_EMAIL}'
       - '--set-secrets=JWT_SECRET=clinical-trial-jwt-secret:latest,ADMIN_PASSWORD=clinical-trial-admin-password:latest,DATABASE_URL=clinical-trial-database-url:latest'
