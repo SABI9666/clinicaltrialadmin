@@ -1,0 +1,55 @@
+# Build the API container and deploy it to Cloud Run.
+#
+#   gcloud builds submit --config server/cloudbuild.yaml \
+#     --substitutions=_REGION=australia-southeast1,_SERVICE=clinical-trial-api
+#
+# Secrets (JWT_SECRET, ADMIN_PASSWORD) are read from Secret Manager at deploy
+# time and never baked into the image.
+substitutions:
+  _REGION: australia-southeast1
+  _SERVICE: clinical-trial-api
+  _REPO: clinical-trial
+  _GCS_BUCKET: ''
+  _CORS_ORIGINS: ''
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest'
+      - '-f'
+      - server/Dockerfile
+      - server
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}']
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - '${_SERVICE}'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+      - '--min-instances=0'
+      - '--max-instances=10'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--set-env-vars=NODE_ENV=production,USE_FIRESTORE=true,USE_GCS=true,GCP_PROJECT_ID=$PROJECT_ID,GCS_BUCKET=${_GCS_BUCKET},CORS_ORIGINS=${_CORS_ORIGINS}'
+      - '--set-secrets=JWT_SECRET=clinical-trial-jwt-secret:latest,ADMIN_PASSWORD=clinical-trial-admin-password:latest'
