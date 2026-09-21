@@ -4,7 +4,9 @@
   "private": true,
   "description": "Backend API for Clinical Trial Access — serves public site content and powers the admin CMS.",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
@@ -23,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "pg": "^8.23.0",
     "zod": "^3.24.1"
   }
 }

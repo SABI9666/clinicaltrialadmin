@@ -3,8 +3,12 @@
 #   gcloud builds submit --config server/cloudbuild.yaml \
 #     --substitutions=_REGION=australia-southeast1,_SERVICE=clinical-trial-api
 #
-# Secrets (JWT_SECRET, ADMIN_PASSWORD) are read from Secret Manager at deploy
-# time and never baked into the image.
+# Secrets (JWT_SECRET, ADMIN_PASSWORD, DATABASE_URL) are read from Secret
+# Manager at deploy time and never baked into the image.
+#
+# DATABASE_URL must be Neon's POOLED connection string (the host containing
+# "-pooler"): Cloud Run scales to many instances and the direct endpoint would
+# exhaust Neon's connection limit.
 substitutions:
   _REGION: australia-southeast1
   _SERVICE: clinical-trial-api
@@ -51,5 +55,5 @@ steps:
       - '--max-instances=10'
       - '--memory=512Mi'
       - '--cpu=1'
-      - '--set-env-vars=NODE_ENV=production,USE_FIRESTORE=true,USE_GCS=true,GCP_PROJECT_ID=$PROJECT_ID,GCS_BUCKET=${_GCS_BUCKET},CORS_ORIGINS=${_CORS_ORIGINS}'
-      - '--set-secrets=JWT_SECRET=clinical-trial-jwt-secret:latest,ADMIN_PASSWORD=clinical-trial-admin-password:latest'
+      - '--set-env-vars=NODE_ENV=production,USE_POSTGRES=true,USE_GCS=true,GCP_PROJECT_ID=$PROJECT_ID,GCS_BUCKET=${_GCS_BUCKET},CORS_ORIGINS=${_CORS_ORIGINS}'
+      - '--set-secrets=JWT_SECRET=clinical-trial-jwt-secret:latest,ADMIN_PASSWORD=clinical-trial-admin-password:latest,DATABASE_URL=clinical-trial-database-url:latest'

@@ -1,11 +1,12 @@
 /**
- * Thin persistence layer with two interchangeable backends:
+ * Thin persistence layer with three interchangeable backends:
  *
- *   - Firestore  (production on Cloud Run — set USE_FIRESTORE=true)
- *   - JSON file  (local development, no GCP credentials required)
+ *   - Postgres   (production — Neon; set USE_POSTGRES=true + DATABASE_URL)
+ *   - Firestore  (alternative on GCP — set USE_FIRESTORE=true)
+ *   - JSON file  (local development, no database or credentials required)
  *
- * Both expose the same small document/collection API used by the services,
- * so nothing above this module knows which one is active.
+ * All three expose the same small document/collection API used by the
+ * services, so nothing above this module knows which one is active.
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
@@ -152,10 +153,19 @@ class FirestoreStore {
 let storePromise;
 
 export function getStore() {
-  storePromise ??= config.firestore.enabled
-    ? FirestoreStore.create()
-    : Promise.resolve(new FileStore(config.dataFile));
+  storePromise ??= (async () => {
+    if (config.database.enabled) {
+      const { PostgresStore } = await import('./postgres.js');
+      return PostgresStore.create();
+    }
+    if (config.firestore.enabled) return FirestoreStore.create();
+    return new FileStore(config.dataFile);
+  })();
   return storePromise;
 }
 
-export const storeBackend = () => (config.firestore.enabled ? 'firestore' : 'file');
+export function storeBackend() {
+  if (config.database.enabled) return 'postgres';
+  if (config.firestore.enabled) return 'firestore';
+  return 'file';
+}

@@ -4,7 +4,7 @@ This repository holds the two pieces that sit behind the public website:
 
 | Path      | What it is                                   | Runs on              |
 | --------- | -------------------------------------------- | -------------------- |
-| `server/` | Node + Express API, Firestore, Cloud Storage  | Google Cloud Run     |
+| `server/` | Node + Express API, Neon Postgres, Cloud Storage | Google Cloud Run |
 | `admin/`  | React admin console for editing site content  | Vercel (or Cloud Run)|
 
 The public site lives in a separate repository,
@@ -17,13 +17,13 @@ and reads everything it renders from this API.
 
 ```
    Admin (Vercel)  ──┐
-                     ├──►  API on Cloud Run  ──►  Firestore (content)
+                     ├──►  API on Cloud Run  ──►  Neon Postgres (content)
    Public site ──────┘                        └►  Cloud Storage (images)
      (Vercel)
 ```
 
-Every piece of text and every image on the public site is a document in
-Firestore. The admin edits those documents; the site reads them through
+Every piece of text and every image on the public site is a row in Postgres.
+The admin edits them; the site reads them through
 `GET /api/public/site`. Nothing on the public site is hard-coded — the
 frontend ships a bundled snapshot only as an offline fallback.
 
@@ -66,36 +66,58 @@ cd server && npm test
 | ---------------- | -------------------------------------------------------------- |
 | `JWT_SECRET`     | Signs admin sessions. **Required**; at least 32 chars in prod.  |
 | `CORS_ORIGINS`   | Comma-separated list of allowed origins. **Required** in prod.  |
-| `USE_FIRESTORE`  | `true` for Firestore, `false` for the local JSON file.          |
+| `USE_POSTGRES`   | `true` to use Neon Postgres. Needs `DATABASE_URL`.              |
+| `DATABASE_URL`   | Neon's **pooled** connection string (host contains `-pooler`).  |
+| `USE_FIRESTORE`  | Alternative backend. Not valid alongside `USE_POSTGRES`.        |
 | `USE_GCS`        | `true` to upload images to Cloud Storage, `false` for local.    |
 | `GCS_BUCKET`     | Bucket name for uploaded images.                                |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Creates the first admin, only when no users exist. |
+
+With none of the backend flags set, the API stores everything in a JSON file,
+so it runs locally with no database at all.
 
 In production the API refuses to start if `JWT_SECRET` or `CORS_ORIGINS` is
 missing, rather than falling back to an insecure default.
 
 ---
 
-## Deploying the API to Google Cloud
+## Deploying
 
-### One-time setup
+### 1. Neon — get the connection string
+
+In the Neon console, open your project and press **Connect**. Choose the
+**Pooled connection** (the host contains `-pooler`) and copy the string:
+
+```
+postgresql://USER:PASSWORD@ep-xxxx-pooler.ap-southeast-2.aws.neon.tech/DB?sslmode=require
+```
+
+The pooled host matters: Cloud Run runs many small instances, and the direct
+endpoint will exhaust Neon's connection limit under load.
+
+Nothing else is needed in Neon — the API creates its table and indexes on
+first boot, and seeds the site content.
+
+### 2. Google Cloud — one-time setup
 
 ```bash
-PROJECT_ID=your-project
-REGION=australia-southeast1
-BUCKET=clinical-trial-media
+PROJECT_ID=clinicaltrialaccess          # must be globally unique
+REGION=australia-southeast1             # Sydney, matching the Neon region
+BUCKET="$PROJECT_ID-media"
+BILLING_ACCOUNT=0132D6-F1ACCE-44BF57    # from Billing → Account management
+ORG_ID=$(gcloud organizations list --format='value(ID)' | head -1)
 
+# Project, inside the organisation, with billing attached
+gcloud projects create "$PROJECT_ID" --organization="$ORG_ID"
 gcloud config set project "$PROJECT_ID"
+gcloud billing projects link "$PROJECT_ID" --billing-account="$BILLING_ACCOUNT"
 
 gcloud services enable \
   run.googleapis.com cloudbuild.googleapis.com \
-  firestore.googleapis.com storage.googleapis.com \
-  artifactregistry.googleapis.com secretmanager.googleapis.com
+  artifactregistry.googleapis.com secretmanager.googleapis.com \
+  storage.googleapis.com
 
-# Firestore in Native mode
-gcloud firestore databases create --location="$REGION"
-
-# Artifact Registry repository for the container image
+# Container registry
 gcloud artifacts repositories create clinical-trial \
   --repository-format=docker --location="$REGION"
 
@@ -106,15 +128,29 @@ gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
   --member=allUsers --role=roles/storage.objectViewer
 
 # Secrets
-openssl rand -base64 48 | gcloud secrets create clinical-trial-jwt-secret --data-file=-
-printf 'a-strong-first-password' | gcloud secrets create clinical-trial-admin-password --data-file=-
+openssl rand -base64 48 | tr -d '\n' | \
+  gcloud secrets create clinical-trial-jwt-secret --data-file=-
+printf 'a-strong-first-password' | \
+  gcloud secrets create clinical-trial-admin-password --data-file=-
+printf '%s' "$NEON_POOLED_URL" | \
+  gcloud secrets create clinical-trial-database-url --data-file=-
 ```
 
-Grant the Cloud Run service account access to Firestore, the bucket and the
-secrets (`roles/datastore.user`, `roles/storage.objectAdmin`,
-`roles/secretmanager.secretAccessor`).
+Grant the Cloud Run runtime service account access to the bucket and secrets:
 
-### Deploy
+```bash
+SA="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')-compute@developer.gserviceaccount.com"
+
+gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
+  --member="serviceAccount:$SA" --role=roles/storage.objectAdmin
+
+for SECRET in clinical-trial-jwt-secret clinical-trial-admin-password clinical-trial-database-url; do
+  gcloud secrets add-iam-policy-binding "$SECRET" \
+    --member="serviceAccount:$SA" --role=roles/secretmanager.secretAccessor
+done
+```
+
+### 3. Deploy
 
 ```bash
 gcloud builds submit --config server/cloudbuild.yaml \
@@ -122,14 +158,15 @@ gcloud builds submit --config server/cloudbuild.yaml \
 _CORS_ORIGINS="https://your-site.vercel.app,https://your-admin.vercel.app"
 ```
 
-`server/cloudbuild.yaml` builds the image, pushes it to Artifact Registry and
-deploys to Cloud Run with Firestore and Cloud Storage enabled. Note the
-service URL it prints — both frontends need it.
+Note the service URL it prints — both frontends need it as
+`VITE_API_BASE_URL`. Check it came up with:
+
+```bash
+curl https://YOUR-SERVICE-URL/healthz     # {"status":"ok","store":"postgres",...}
+```
 
 After the first deploy, sign in to the admin and change the bootstrap
 password.
-
----
 
 ## Deploying the admin to Vercel
 

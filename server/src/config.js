@@ -22,6 +22,16 @@ export const config = {
     expiresIn: process.env.JWT_EXPIRES_IN ?? '12h',
   },
 
+  database: {
+    // Neon's pooled connection string. Use the host containing "-pooler":
+    // Cloud Run scales to many instances and the direct endpoint will run out
+    // of connections.
+    url: process.env.DATABASE_URL ?? '',
+    enabled: bool(process.env.USE_POSTGRES, false),
+    ssl: bool(process.env.DATABASE_SSL, true),
+    poolMax: Number(process.env.DATABASE_POOL_MAX ?? 5),
+  },
+
   firestore: {
     projectId: process.env.GCP_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT ?? '',
     databaseId: process.env.FIRESTORE_DATABASE_ID ?? '(default)',
@@ -55,8 +65,12 @@ export function assertProductionConfig() {
     missing.push('JWT_SECRET (min 32 chars)');
   }
   if (config.corsOrigins.length === 0) missing.push('CORS_ORIGINS');
+  if (config.database.enabled && !config.database.url) missing.push('DATABASE_URL');
   if (config.firestore.enabled && !config.firestore.projectId) missing.push('GCP_PROJECT_ID');
   if (config.storage.enabled && !config.storage.bucket) missing.push('GCS_BUCKET');
+  if (config.database.enabled && config.firestore.enabled) {
+    missing.push('only one of USE_POSTGRES / USE_FIRESTORE may be set');
+  }
   if (missing.length) {
     throw new Error(`Missing required production config: ${missing.join(', ')}`);
   }
