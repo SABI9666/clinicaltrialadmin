@@ -57,10 +57,20 @@ after(async () => {
 });
 
 describe('health', () => {
-  test('reports ok', async () => {
+  test('reports ok on /healthz', async () => {
     const res = await api('/healthz');
     assert.equal(res.status, 200);
     assert.equal((await res.json()).status, 'ok');
+  });
+
+  // Cloud Run's frontend swallows /healthz, so the deployed health check has
+  // to live under /api. Both must answer identically.
+  test('reports ok on /api/health', async () => {
+    const res = await api('/api/health');
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.status, 'ok');
+    assert.ok(body.store, 'should report which store backend is active');
   });
 });
 

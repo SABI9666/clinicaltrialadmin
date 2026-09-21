@@ -48,9 +48,15 @@ export function createApp() {
     app.use('/uploads', express.static(config.storage.localDir, { maxAge: '1h' }));
   }
 
-  app.get('/healthz', (req, res) =>
-    res.json({ status: 'ok', env: config.env, store: storeBackend(), time: new Date().toISOString() }),
-  );
+  // Google's frontend intercepts /healthz on Cloud Run and answers it with its
+  // own 404, so the request never reaches this app. Anything under /api passes
+  // through, so that is the health check to rely on in a deployment; /healthz
+  // is kept because it works fine locally and in other runtimes.
+  const health = (req, res) =>
+    res.json({ status: 'ok', env: config.env, store: storeBackend(), time: new Date().toISOString() });
+
+  app.get('/api/health', health);
+  app.get('/healthz', health);
 
   app.use('/api/auth', authRoutes);
   app.use('/api/public', publicRoutes);

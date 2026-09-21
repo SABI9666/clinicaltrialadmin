@@ -170,8 +170,13 @@ Note the service URL it prints — both frontends need it as
 `VITE_API_BASE_URL`. Check it came up with:
 
 ```bash
-curl https://YOUR-SERVICE-URL/healthz     # {"status":"ok","store":"postgres",...}
+curl https://YOUR-SERVICE-URL/api/health   # {"status":"ok","store":"postgres",...}
 ```
+
+Use `/api/health`, not `/healthz`: Google's frontend intercepts `/healthz` on
+Cloud Run and answers with its own 404 before the request reaches the
+container, which looks exactly like a broken deployment. The app still serves
+`/healthz` for local runs and other platforms.
 
 ### 4. Sign in
 
@@ -204,7 +209,7 @@ a strong password and add accounts only for people who need them.
 
 | Method | Path                       | Purpose                                  |
 | ------ | -------------------------- | ---------------------------------------- |
-| GET    | `/healthz`                 | Health check                             |
+| GET    | `/api/health`              | Health check (`/healthz` too, see note)  |
 | GET    | `/api/public/site`         | Every section + published collections    |
 | GET    | `/api/public/sections/:key`| A single section                         |
 | GET    | `/api/public/trials`       | Published trials, filterable             |
