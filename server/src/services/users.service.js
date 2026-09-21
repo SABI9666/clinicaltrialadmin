@@ -71,6 +71,12 @@ export function verifyToken(token) {
   return jwt.verify(token, config.jwt.secret);
 }
 
+/** True when at least one user account exists. */
+export async function hasAnyUser() {
+  const store = await getStore();
+  return (await store.listDocs(USERS)).length > 0;
+}
+
 /** Create the first admin from env vars if no users exist yet. */
 export async function ensureBootstrapAdmin() {
   const { email, password } = config.bootstrapAdmin;

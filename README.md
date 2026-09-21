@@ -155,8 +155,16 @@ done
 ```bash
 gcloud builds submit --config server/cloudbuild.yaml \
   --substitutions=_REGION=$REGION,_GCS_BUCKET=$BUCKET,\
+_ADMIN_EMAIL="you@example.com",\
 _CORS_ORIGINS="https://your-site.vercel.app,https://your-admin.vercel.app"
 ```
+
+`_ADMIN_EMAIL` and the `clinical-trial-admin-password` secret create your
+sign-in for the admin console. They take effect **only while the user table is
+empty**, so they matter on the first deploy and are ignored afterwards. If
+either is missing no account is created, and because adding a user needs an
+existing admin token there is no other way in — the API logs a warning at
+startup saying exactly which one is unset.
 
 Note the service URL it prints — both frontends need it as
 `VITE_API_BASE_URL`. Check it came up with:
@@ -165,8 +173,13 @@ Note the service URL it prints — both frontends need it as
 curl https://YOUR-SERVICE-URL/healthz     # {"status":"ok","store":"postgres",...}
 ```
 
-After the first deploy, sign in to the admin and change the bootstrap
-password.
+### 4. Sign in
+
+Your credentials are the ones from step 2: `_ADMIN_EMAIL` and whatever you put
+into the `clinical-trial-admin-password` secret. There is no default account
+and no default password.
+
+Change the password once you are in: **Users → Set password**.
 
 ## Deploying the admin to Vercel
 
