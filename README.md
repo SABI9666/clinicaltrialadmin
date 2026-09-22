@@ -81,6 +81,54 @@ missing, rather than falling back to an insecure default.
 
 ---
 
+## Using the admin console
+
+The console explains itself: **How-to guide** in the sidebar is a written
+walkthrough of every routine job, and each editor opens with a "How this page
+works" panel. What follows is the short version for whoever sets it up.
+
+### What the menu means
+
+| Group             | What it edits                                                      |
+| ----------------- | ------------------------------------------------------------------ |
+| **Page sections** | The wording and pictures of the home page, listed top to bottom.    |
+| **Content**       | The lists visitors browse: trials, reports, FAQs, news, policies.   |
+| **Admin**         | The enquiry inbox, and (admins only) who can sign in.               |
+
+### Trials and the search filters
+
+The public search matches a trial to a filter by exact text: a trial is only
+found under "Diabetes" when its condition **is** `Diabetes`. To make that
+impossible to get wrong, the trial editor offers the site's own filter options
+as dropdowns rather than free-text boxes, sourced from the **Search filters**
+section.
+
+Adding a new option therefore works from either end:
+
+- **While editing a trial** — press "+ Add a new condition" (or country, or
+  state / territory) under the matching dropdown. The option is saved into
+  Search filters straight away and selected for the trial in hand.
+- **From Search filters** — edit all four lists in one place, then Save.
+
+A trial whose stored value is not in the filter list (imported data, or a
+stray trailing space) shows an amber warning under the dropdown with a
+one-press fix that adds the tidied value to the filters and selects it.
+
+Leaving a filter on "Not specified" is deliberate and safe: the API and the
+site both treat an empty value as "not confirmed", so the trial appears
+whatever the visitor searches for rather than being hidden.
+
+### Publishing
+
+Everything in **Content** is either Live or Draft. Untick "Published" in the
+editor, or press the ● / ◯ button beside an entry in the list. ✕ deletes for
+good; a draft is almost always the better choice.
+
+"Reset to default" on a page section restores its original wording and is
+limited to admins, matching the API, which rejects the call for editors.
+
+---
+
 ## Deploying
 
 ### 1. Neon — get the connection string
