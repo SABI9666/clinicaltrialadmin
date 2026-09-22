@@ -174,7 +174,9 @@ reaches the person directly, and the reply never passes through you.
 1. Create an account at [resend.com](https://resend.com), add your sending
    domain, and add the DNS records it gives you.
 2. Create an API key.
-3. Set `RESEND_API_KEY` and `MAIL_FROM` on the API (see `.env.example`).
+3. Set `RESEND_API_KEY` and `MAIL_FROM` on the API (see `.env.example`). On
+   Cloud Run these arrive from the `clinical-trial-resend-key` secret and the
+   `_MAIL_FROM` substitution — see the deploy step below.
 
 In production, store the key as a secret rather than a plain env var:
 
@@ -258,7 +260,8 @@ SA="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')-co
 gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
   --member="serviceAccount:$SA" --role=roles/storage.objectAdmin
 
-for SECRET in clinical-trial-jwt-secret clinical-trial-admin-password clinical-trial-database-url; do
+for SECRET in clinical-trial-jwt-secret clinical-trial-admin-password \
+  clinical-trial-database-url clinical-trial-resend-key; do
   gcloud secrets add-iam-policy-binding "$SECRET" \
     --member="serviceAccount:$SA" --role=roles/secretmanager.secretAccessor
 done
@@ -270,8 +273,14 @@ done
 gcloud builds submit --config server/cloudbuild.yaml \
   --substitutions=_REGION=$REGION,_GCS_BUCKET=$BUCKET,\
 _ADMIN_EMAIL="you@example.com",\
+_MAIL_FROM="registrations@your-domain.org",\
 _CORS_ORIGINS="https://your-site.vercel.app,https://your-admin.vercel.app"
 ```
+
+`_MAIL_FROM` must be an address on the domain you verified in Resend, and the
+`clinical-trial-resend-key` secret must exist before this runs. Without both,
+the API comes up and the registration form still accepts people — every one of
+them is recorded as undelivered and nobody is contacted.
 
 `_ADMIN_EMAIL` and the `clinical-trial-admin-password` secret create your
 sign-in for the admin console. They take effect **only while the user table is

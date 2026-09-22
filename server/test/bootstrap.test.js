@@ -95,6 +95,26 @@ describe('deployment config', () => {
     assert.match(yaml, /_ADMIN_EMAIL:/, '_ADMIN_EMAIL substitution must be declared');
   });
 
+  test('cloudbuild passes the mail settings registrations need', async () => {
+    const yaml = await readFile('cloudbuild.yaml', 'utf8');
+    // Without these the API comes up healthy and records every registration as
+    // undelivered — the form looks like it works and nobody is contacted.
+    assert.match(yaml, /RESEND_API_KEY=clinical-trial-resend-key/, 'the key must be a secret');
+    assert.match(yaml, /MAIL_FROM=\$\{_MAIL_FROM\}/, 'MAIL_FROM must be wired up');
+    assert.match(yaml, /_MAIL_FROM:/, '_MAIL_FROM substitution must be declared');
+  });
+
+  test('sets every environment variable in a single flag', async () => {
+    const yaml = await readFile('cloudbuild.yaml', 'utf8');
+    // gcloud replaces the value of a repeated --set-env-vars rather than
+    // merging, so a second flag would quietly drop everything in the first.
+    assert.equal(
+      (yaml.match(/--set-env-vars=/g) ?? []).length,
+      1,
+      'a second --set-env-vars would discard the first',
+    );
+  });
+
   test('cloudbuild wires the database and auth secrets', async () => {
     const yaml = await readFile('cloudbuild.yaml', 'utf8');
     for (const name of ['JWT_SECRET=', 'DATABASE_URL=', 'CORS_ORIGINS=']) {
