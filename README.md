@@ -271,11 +271,14 @@ done
 
 ```bash
 gcloud builds submit --config server/cloudbuild.yaml \
-  --substitutions=_REGION=$REGION,_GCS_BUCKET=$BUCKET,\
-_ADMIN_EMAIL="you@example.com",\
-_MAIL_FROM="registrations@your-domain.org",\
-_CORS_ORIGINS="https://your-site.vercel.app,https://your-admin.vercel.app"
+  --substitutions='^|^_REGION=australia-southeast1|_GCS_BUCKET=your-bucket|_ADMIN_EMAIL=you@example.com|_MAIL_FROM=registrations@your-domain.org|_CORS_ORIGINS=https://your-site.vercel.app,https://your-admin.vercel.app'
 ```
+
+The leading `^|^` matters. `--substitutions` is itself comma-separated, and
+shell quotes do not protect a comma from gcloud's own parser — with the usual
+commas, a `_CORS_ORIGINS` holding two sites is split into a substitution and a
+fragment, and the build fails on the fragment. `^|^` moves the separator to a
+character the values do not contain.
 
 `_MAIL_FROM` must be an address on the domain you verified in Resend, and the
 `clinical-trial-resend-key` secret must exist before this runs. Without both,
