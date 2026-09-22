@@ -118,6 +118,13 @@ button.add { border-style: dashed; width: 100%; }
   color: var(--muted);
   padding: 0 8px 6px;
 }
+.nav-note {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: -2px 8px 6px;
+}
+
 .nav-group button {
   background: none;
   border: 0;
@@ -464,6 +471,287 @@ button.add { border-style: dashed; width: 100%; }
 .toast button { background: none; border: 0; color: inherit; padding: 0; font-size: 13px; }
 .toast button:hover { background: none; }
 
+/* ------------------------------ help panel ------------------------------- */
+
+.help-panel {
+  border: 1px solid #c7ddf1;
+  background: var(--tint);
+  border-radius: var(--radius);
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+.help-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 12px 16px;
+  text-align: left;
+}
+.help-head:hover:not(:disabled) { background: #dfeefb; }
+.help-icon {
+  display: grid;
+  place-items: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  flex: none;
+}
+.help-title { font-weight: 600; font-size: 14px; flex: 1; color: var(--ink); }
+.help-toggle { font-size: 12px; color: var(--blue); }
+
+.help-body { padding: 0 16px 14px 46px; }
+.help-where { font-size: 13px; margin-bottom: 10px; }
+.help-steps { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+.help-steps li { font-size: 13.5px; line-height: 1.55; }
+.help-body > button { margin-top: 12px; font-size: 13px; }
+
+/* ------------------------------ step panels ------------------------------ */
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  overflow: hidden;
+}
+.panel-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 18px;
+  background: var(--tint);
+  border-bottom: 1px solid var(--line);
+}
+.panel-number {
+  display: grid;
+  place-items: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  flex: none;
+}
+.panel-title { font-size: 15px; font-weight: 700; margin: 0 0 2px; text-transform: none; letter-spacing: 0; color: var(--ink); }
+.panel-head .hint { margin: 0; max-width: 62ch; }
+.panel-body { padding: 18px 18px 6px; }
+.panel-body > .field:last-child { margin-bottom: 12px; }
+
+.group-blurb { margin: -4px 0 12px; }
+
+/* --------------------------- taxonomy pickers ---------------------------- */
+
+.picker { display: flex; flex-direction: column; gap: 8px; }
+.picker > select {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid #ccdae7;
+  border-radius: 7px;
+  background: var(--paper);
+}
+.picker-foot { display: flex; }
+
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--blue);
+  text-decoration: underline;
+  font-size: 13px;
+}
+.link-button:hover:not(:disabled) { background: none; color: var(--blue-light); }
+
+.add-option {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--tint);
+  border: 1px dashed #b7d2e9;
+  border-radius: 8px;
+  padding: 10px;
+  width: 100%;
+}
+.add-option input {
+  flex: 1;
+  min-width: 180px;
+  padding: 8px 10px;
+  border: 1px solid #ccdae7;
+  border-radius: 7px;
+  background: var(--paper);
+}
+.add-option button { font-size: 13px; padding: 7px 12px; }
+.add-option-hint { flex-basis: 100%; margin: 0; }
+
+.field-warning {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #7c2d12;
+  background: #fdf0e6;
+  border: 1px solid #f2c9a8;
+  border-radius: 8px;
+  padding: 9px 11px;
+  margin: 0;
+}
+.field-warning .link-button { color: #7c2d12; }
+
+.checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--paper);
+}
+.check { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
+.check input[type='checkbox'] { width: auto; margin: 0; accent-color: var(--blue); flex: none; }
+.check-unknown span { color: #7c2d12; }
+
+.empty-note {
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--canvas);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0;
+}
+
+/* ------------------------------- guide ----------------------------------- */
+
+.guide-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.guide-index a {
+  font-size: 13px;
+  color: var(--blue);
+  text-decoration: none;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 6px 14px;
+}
+.guide-index a:hover { background: var(--tint); border-color: #bcd4e8; }
+
+.guide { display: flex; flex-direction: column; gap: 18px; max-width: 860px; }
+.guide-chapter {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  scroll-margin-top: 20px;
+}
+.guide-chapter > header { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+.guide-chapter h2 { margin: 0 0 4px; font-size: 17px; }
+.guide-chapter p { margin: 0; }
+.guide-number {
+  display: grid;
+  place-items: center;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  flex: none;
+}
+.guide-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 9px; }
+.guide-steps li { line-height: 1.6; }
+.guide-note {
+  margin: 16px 0 0;
+  font-size: 13.5px;
+  background: var(--tint);
+  border-left: 3px solid var(--blue-light);
+  border-radius: 0 8px 8px 0;
+  padding: 11px 14px;
+}
+.guide-chapter > button { margin-top: 16px; }
+
+/* ---------------------- dashboard welcome + actions ---------------------- */
+
+.welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  background: linear-gradient(120deg, var(--blue) 0%, var(--blue-light) 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 28px;
+}
+.welcome h2 { color: #fff; margin-bottom: 6px; }
+.welcome .muted { color: #e2effa; max-width: 62ch; margin: 0; }
+.welcome button { background: #fff; border-color: #fff; color: var(--blue); flex: none; }
+.welcome button:hover:not(:disabled) { background: var(--tint); border-color: var(--tint); }
+
+.block-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+.cards + .block-title, .quick-actions + .block-title { margin-top: 30px; }
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+  margin-bottom: 30px;
+}
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+}
+.quick-action strong { font-size: 14px; }
+
+.card-note { font-size: 12px; color: var(--muted); margin: 10px 0 0; line-height: 1.45; }
+
+/* ------------------------- editor status + lists -------------------------- */
+
+.dirty-flag {
+  font-size: 12px;
+  color: #8a5a00;
+  background: #fdf0d5;
+  border-radius: 20px;
+  padding: 5px 12px;
+}
+
+.list-head { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.list-head input {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid #ccdae7;
+  border-radius: 7px;
+  background: var(--paper);
+}
+.list-head p { margin: 0; }
+
+.detail-head > div { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.detail-head h2 { margin: 0; }
+
+.empty-state { padding: 40px 10px; text-align: center; }
+.empty-state h2 { font-size: 16px; }
+.empty-state p { max-width: 44ch; margin: 0 auto; }
+
 /* ----------------------------- responsive -------------------------------- */
 
 @media (max-width: 1000px) {
@@ -473,4 +761,7 @@ button.add { border-style: dashed; width: 100%; }
   .collection { grid-template-columns: 1fr; }
   .image-field { grid-template-columns: 1fr; }
   .cta-field { grid-template-columns: 1fr; }
+  .welcome { flex-direction: column; align-items: flex-start; }
+  .help-body { padding-left: 16px; }
+  .checklist { grid-template-columns: 1fr; }
 }

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api.js';
 import { COLLECTION_SCHEMAS } from '../lib/schemas.js';
-import Field from '../components/Fields.jsx';
+import { setDirty } from '../lib/unsaved.js';
+import FieldGroups from '../components/FieldGroups.jsx';
+import HelpPanel from '../components/HelpPanel.jsx';
 
 /** Derive a URL-safe slug so the slug field fills itself in from the title. */
 const slugify = (s) =>
@@ -11,16 +13,18 @@ const slugify = (s) =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 120);
 
-export default function CollectionEditor({ collection, notify }) {
+export default function CollectionEditor({ collection, notify, onNavigate }) {
   const schema = COLLECTION_SCHEMAS[collection];
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [draft, setDraft] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
 
   const isNew = selectedId === 'new';
   const hasSlug = schema.fields.some((f) => f.key === 'slug');
+  const noun = schema.singular.toLowerCase();
 
   async function load(selectAfter) {
     setLoading(true);
@@ -42,6 +46,7 @@ export default function CollectionEditor({ collection, notify }) {
   useEffect(() => {
     setSelectedId(null);
     setDraft(null);
+    setQuery('');
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collection]);
@@ -51,12 +56,42 @@ export default function CollectionEditor({ collection, notify }) {
     [items, selectedId],
   );
 
+  const dirty = Boolean(draft) && JSON.stringify(draft) !== JSON.stringify(selected ?? schema.blank);
+
+  useEffect(() => {
+    setDirty(dirty);
+    return () => setDirty(false);
+  }, [dirty]);
+
+  /** Guard every way of walking away from a half-finished entry. */
+  function leaveDraft() {
+    if (!dirty) return true;
+    return confirm(
+      `Your changes to this ${noun} are not saved yet. Leave them and lose the changes?`,
+    );
+  }
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((i) =>
+      String(i[schema.titleField] ?? '')
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [items, query, schema.titleField]);
+
+  const liveCount = items.filter((i) => i.published !== false).length;
+
   function startNew() {
+    if (!leaveDraft()) return;
     setSelectedId('new');
     setDraft(structuredClone(schema.blank));
   }
 
   function select(item) {
+    if (item.id === selectedId) return;
+    if (!leaveDraft()) return;
     setSelectedId(item.id);
     setDraft(structuredClone(item));
   }
@@ -65,14 +100,36 @@ export default function CollectionEditor({ collection, notify }) {
     setDraft((cur) => {
       const next = { ...cur, [key]: value };
       // Fill an untouched slug from the title so new entries need one less step.
-      if (key === schema.titleField && hasSlug && (!cur.slug || cur.slug === slugify(cur[schema.titleField] ?? ''))) {
+      if (
+        key === schema.titleField &&
+        hasSlug &&
+        (!cur.slug || cur.slug === slugify(cur[schema.titleField] ?? ''))
+      ) {
         next.slug = slugify(value ?? '');
       }
+      // A different country invalidates states chosen under the previous one.
+      if (key === 'country') next.states = [];
       return next;
     });
   }
 
+  /** Catch the empty required boxes here, with a friendlier message than 400. */
+  function missingRequired() {
+    return schema.fields
+      .filter((f) => f.required && !String(draft?.[f.key] ?? '').trim())
+      .map((f) => f.label);
+  }
+
   async function save() {
+    const missing = missingRequired();
+    if (missing.length > 0) {
+      notify({
+        type: 'error',
+        message: `Please fill in: ${missing.join(', ')}.`,
+      });
+      return;
+    }
+
     setBusy(true);
     try {
       if (isNew) {
@@ -82,7 +139,7 @@ export default function CollectionEditor({ collection, notify }) {
       } else {
         await api.update(collection, selectedId, draft);
         await load(selectedId);
-        notify({ type: 'success', message: `${schema.singular} saved.` });
+        notify({ type: 'success', message: `${schema.singular} saved. The site is updated.` });
       }
     } catch (err) {
       notify({ type: 'error', message: err.message });
@@ -92,7 +149,12 @@ export default function CollectionEditor({ collection, notify }) {
   }
 
   async function remove(item) {
-    if (!confirm(`Delete "${item[schema.titleField] || 'this item'}"? This cannot be undone.`)) return;
+    if (
+      !confirm(
+        `Delete "${item[schema.titleField] || `this ${noun}`}" for good? This cannot be undone — to hide it instead, use the ● button.`,
+      )
+    )
+      return;
     try {
       await api.remove(collection, item.id);
       if (item.id === selectedId) {
@@ -122,15 +184,20 @@ export default function CollectionEditor({ collection, notify }) {
   }
 
   async function togglePublished(item) {
+    const goingLive = item.published === false;
     try {
-      await api.update(collection, item.id, { published: !item.published });
+      await api.update(collection, item.id, { published: goingLive });
       await load(selectedId === item.id ? item.id : undefined);
+      notify({
+        type: 'success',
+        message: goingLive
+          ? `"${item[schema.titleField] || noun}" is now live on the site.`
+          : `"${item[schema.titleField] || noun}" is now a draft and hidden from the site.`,
+      });
     } catch (err) {
       notify({ type: 'error', message: err.message });
     }
   }
-
-  const dirty = draft && JSON.stringify(draft) !== JSON.stringify(selected ?? schema.blank);
 
   return (
     <>
@@ -140,85 +207,152 @@ export default function CollectionEditor({ collection, notify }) {
           <p className="muted">{schema.blurb}</p>
         </div>
         <div className="page-actions">
+          {dirty && <span className="dirty-flag">Not saved yet</span>}
           <button type="button" className="primary" onClick={startNew}>
-            + New {schema.singular.toLowerCase()}
+            + New {noun}
           </button>
         </div>
       </header>
 
+      <HelpPanel
+        id={`collection.${collection}`}
+        steps={schema.steps}
+        where={schema.where}
+        footer={
+          collection === 'trials' && onNavigate ? (
+            <button type="button" onClick={() => onNavigate({ kind: 'section', key: 'facets' })}>
+              Manage the search filter options →
+            </button>
+          ) : null
+        }
+      />
+
       <div className="collection">
         <aside className="collection-list">
+          <div className="list-head">
+            <input
+              type="search"
+              value={query}
+              placeholder={`Search ${schema.title.toLowerCase()}…`}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label={`Search ${schema.title}`}
+            />
+            {!loading && (
+              <p className="muted small">
+                {items.length} total · {liveCount} live on the site
+              </p>
+            )}
+          </div>
+
           {loading ? (
             <p className="muted">Loading…</p>
           ) : items.length === 0 ? (
-            <p className="muted">Nothing here yet.</p>
+            <p className="muted">
+              Nothing here yet. Press "+ New {noun}" to add the first one.
+            </p>
+          ) : visible.length === 0 ? (
+            <p className="muted">No {schema.title.toLowerCase()} match "{query}".</p>
           ) : (
-            items.map((item, index) => (
-              <div
-                key={item.id}
-                className={`collection-item${item.id === selectedId ? ' active' : ''}`}
-              >
-                <button type="button" className="collection-item-main" onClick={() => select(item)}>
-                  <span className="collection-item-title">
-                    {item[schema.titleField] || '(untitled)'}
-                  </span>
-                  <span className={`badge ${item.published === false ? 'draft' : 'live'}`}>
-                    {item.published === false ? 'Draft' : 'Live'}
-                  </span>
-                </button>
-                <div className="row-controls">
-                  <button type="button" onClick={() => move(index, -1)} disabled={index === 0} title="Move up">
-                    ↑
+            visible.map((item) => {
+              const index = items.indexOf(item);
+              return (
+                <div
+                  key={item.id}
+                  className={`collection-item${item.id === selectedId ? ' active' : ''}`}
+                >
+                  <button type="button" className="collection-item-main" onClick={() => select(item)}>
+                    <span className="collection-item-title">
+                      {item[schema.titleField] || '(untitled)'}
+                    </span>
+                    <span className={`badge ${item.published === false ? 'draft' : 'live'}`}>
+                      {item.published === false ? 'Draft' : 'Live'}
+                    </span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => move(index, 1)}
-                    disabled={index === items.length - 1}
-                    title="Move down"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => togglePublished(item)}
-                    title={item.published === false ? 'Publish' : 'Unpublish'}
-                  >
-                    {item.published === false ? '◯' : '●'}
-                  </button>
-                  <button type="button" className="danger" onClick={() => remove(item)} title="Delete">
-                    ✕
-                  </button>
+                  <div className="row-controls">
+                    <button
+                      type="button"
+                      onClick={() => move(index, -1)}
+                      disabled={index === 0 || Boolean(query)}
+                      title="Move up"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => move(index, 1)}
+                      disabled={index === items.length - 1 || Boolean(query)}
+                      title="Move down"
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => togglePublished(item)}
+                      title={
+                        item.published === false
+                          ? 'Publish — show on the site'
+                          : 'Unpublish — hide from the site'
+                      }
+                    >
+                      {item.published === false ? '◯' : '●'}
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() => remove(item)}
+                      title="Delete for good"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </aside>
 
         <div className="collection-detail">
           {!draft ? (
-            <p className="muted">
-              Select {schema.singular.toLowerCase() === 'faq' ? 'an' : 'a'}{' '}
-              {schema.singular.toLowerCase()} to edit, or create a new one.
-            </p>
+            <div className="empty-state">
+              <h2>Nothing open yet</h2>
+              <p className="muted">
+                Choose {noun === 'faq' ? 'an' : 'a'} {noun} from the list on the left to edit it, or
+                press "+ New {noun}" to add one.
+              </p>
+            </div>
           ) : (
             <>
               <div className="detail-head">
-                <h2>{isNew ? `New ${schema.singular.toLowerCase()}` : draft[schema.titleField] || '(untitled)'}</h2>
-                <button type="button" className="primary" onClick={save} disabled={busy || (!isNew && !dirty)}>
-                  {busy ? 'Saving…' : isNew ? `Create ${schema.singular.toLowerCase()}` : dirty ? 'Save changes' : 'Saved'}
+                <div>
+                  <h2>{isNew ? `New ${noun}` : draft[schema.titleField] || '(untitled)'}</h2>
+                  {!isNew && (
+                    <span className={`badge ${draft.published === false ? 'draft' : 'live'}`}>
+                      {draft.published === false ? 'Draft' : 'Live'}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={save}
+                  disabled={busy || (!isNew && !dirty)}
+                >
+                  {busy
+                    ? 'Saving…'
+                    : isNew
+                      ? `Create ${noun}`
+                      : dirty
+                        ? 'Save changes'
+                        : 'Saved'}
                 </button>
               </div>
 
-              <div className="editor">
-                {schema.fields.map((field) => (
-                  <Field
-                    key={field.key}
-                    field={field}
-                    value={draft[field.key]}
-                    onChange={(v) => setField(field.key, v)}
-                  />
-                ))}
-              </div>
+              <FieldGroups
+                schema={schema}
+                value={draft}
+                ctx={{ notify, record: draft }}
+                onChange={setField}
+              />
             </>
           )}
         </div>
