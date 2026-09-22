@@ -97,7 +97,7 @@ together, whether they are stored as a page section or as a list:
 | -------------------- | --------------------------------------------------------------------- |
 | **Overview**         | Counts, the four most common jobs, and a link to the guide.           |
 | **How-to guide**     | The written walkthrough of every routine job.                         |
-| **Trials**           | The trials, the options visitors search by, and the search wording.   |
+| **Trials**           | The trials, recruiting centres and their emails, registration deliveries, the options visitors search by, and the search wording. |
 | **Insights & news**  | Reports, FAQs, News, and the headings above those tabs.               |
 | **Home page**        | The rest of the home page, top to bottom.                             |
 | **Enquiries**        | Messages sent through the contact form.                               |
@@ -140,6 +140,58 @@ good; a draft is almost always the better choice.
 
 "Reset to default" on a page section restores its original wording and is
 limited to admins, matching the API, which rejects the call for editors.
+
+### Registrations, centres and email
+
+A visitor who opens a trial and presses its button gets a three-step
+registration form: consent, contact details, then the trial's own screening
+questions and a choice of recruiting centre.
+
+**Nothing personal is stored.** The submission is composed into an email to
+the centre the person chose and then dropped — it is never written to the
+database, so the admin console has no personal data to leak, export, or erase
+on request. What *is* stored is a delivery record carrying no personal data at
+all: when, which trial, which centre, and whether the email got through. Without
+it a failed send would vanish silently. It is shown under Trials →
+Registrations.
+
+Who edits what:
+
+| Where | What it controls |
+| ----- | ---------------- |
+| Trials → **Centres & emails** | Each centre or region, and the address its registrations go to. Never exposed on the public API. |
+| Trials → **All trials** → "The registration form" | Which centres recruit for that trial, the consent wording, and the screening questions. |
+| Trials → **Registrations** | The delivery log. Proof it arrived, nothing more. |
+
+The email is addressed **from your own domain**, with the registrant in
+`Reply-To`. It cannot be sent *as* the registrant: their domain's SPF and DKIM
+records do not authorise your server, so such a message is marked as spam or
+rejected. The practical effect is the same — the centre presses Reply and
+reaches the person directly, and the reply never passes through you.
+
+#### Setting up Resend
+
+1. Create an account at [resend.com](https://resend.com), add your sending
+   domain, and add the DNS records it gives you.
+2. Create an API key.
+3. Set `RESEND_API_KEY` and `MAIL_FROM` on the API (see `.env.example`).
+
+In production, store the key as a secret rather than a plain env var:
+
+```bash
+printf '%s' "$RESEND_KEY" | \
+  gcloud secrets create clinical-trial-resend-key --data-file=-
+gcloud secrets add-iam-policy-binding clinical-trial-resend-key \
+  --member="serviceAccount:$SA" --role=roles/secretmanager.secretAccessor
+```
+
+With no key set, the flow still runs end to end: the send is logged instead,
+and the Registrations page says plainly that email is not configured, so a
+missing key can never look like a working mailbox.
+
+Sending goes through `server/src/services/mail.service.js`. Every caller uses
+`sendMail`, so moving to another provider means writing one more `deliver`
+function rather than touching the callers.
 
 ---
 

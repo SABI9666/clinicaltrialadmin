@@ -324,6 +324,27 @@ export const policies = [
   },
 ];
 
+/**
+ * Recruiting centres. Each carries the address a registration for it is
+ * emailed to — that address is admin-only and never reaches the public API.
+ */
+export const centres = [
+  {
+    name: 'Royal North Shore Hospital',
+    region: 'New South Wales',
+    email: '',
+    order: 1,
+    published: true,
+  },
+  {
+    name: 'Monash House Research Centre',
+    region: 'Victoria',
+    email: '',
+    order: 2,
+    published: true,
+  },
+];
+
 /** Singleton documents, keyed by their document id in the `content` collection. */
 export const SINGLETONS = {
   settings,
@@ -340,4 +361,4 @@ export const SINGLETONS = {
 };
 
 /** List collections, keyed by their Firestore collection name. */
-export const COLLECTIONS = { trials, reports, faqs, news, policies };
+export const COLLECTIONS = { trials, reports, faqs, news, policies, centres };

@@ -40,6 +40,16 @@ export const NAV = [
         hint: 'Add, edit, publish and order the trials',
       },
       {
+        label: 'Centres & emails',
+        target: { kind: 'collection', key: 'centres' },
+        hint: 'Recruiting centres, and where each one\u2019s registrations are emailed',
+      },
+      {
+        label: 'Registrations',
+        target: { kind: 'registrations' },
+        hint: 'Proof that registrations reached the centres. No personal details.',
+      },
+      {
         label: 'Search filter options',
         target: { kind: 'section', key: 'facets' },
         hint: 'The conditions, countries, states and age ranges visitors can pick',

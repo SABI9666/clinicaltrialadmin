@@ -104,6 +104,27 @@ export async function reorderItems(collection, ids) {
 }
 
 /**
+ * A centre as the public site is allowed to see it.
+ *
+ * The notification address is deliberately dropped: it is an internal contact
+ * for the research team, and publishing it on an open endpoint would hand it
+ * to every scraper that visits. Registration email is addressed server-side
+ * from the stored centre, so the browser never needs it.
+ */
+export const publicCentre = ({ id, name, region }) => ({ id, name, region });
+
+export async function listPublicCentres() {
+  const centres = await listItems('centres', { publishedOnly: true });
+  return centres.map(publicCentre);
+}
+
+/** Look up a centre by id, with its address, for sending a registration. */
+export async function getCentreForDelivery(id) {
+  const centres = await listItems('centres', { publishedOnly: true });
+  return centres.find((c) => c.id === id) ?? null;
+}
+
+/**
  * The single payload the public site fetches on load: every section plus every
  * published collection, so the frontend renders in one round trip.
  */
@@ -116,7 +137,7 @@ export async function getPublicSite() {
       listItems(c, { publishedOnly: true }),
     ),
   );
-  return { ...sections, trials, reports, faqs, news, policies };
+  return { ...sections, trials, reports, faqs, news, policies, centres: await listPublicCentres() };
 }
 
 /** Write the bundled defaults for anything that has no stored document yet. */

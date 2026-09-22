@@ -100,6 +100,10 @@ export const api = {
   updateEnquiry: (id, patch) => request(`/api/admin/enquiries/${id}`, { method: 'PUT', body: patch }),
   removeEnquiry: (id) => request(`/api/admin/enquiries/${id}`, { method: 'DELETE' }),
 
+  listRegistrations: () => request('/api/admin/registrations'),
+  registrationStats: () => request('/api/admin/registrations/stats'),
+  removeRegistration: (id) => request(`/api/admin/registrations/${id}`, { method: 'DELETE' }),
+
   listUsers: () => request('/api/auth/users'),
   createUser: (value) => request('/api/auth/users', { method: 'POST', body: value }),
   setUserPassword: (id, password) =>

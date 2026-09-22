@@ -30,6 +30,12 @@ import {
   listEnquiries,
   updateEnquiry,
 } from '../services/enquiries.service.js';
+import {
+  deleteRegistration,
+  listRegistrations,
+  registrationStats,
+} from '../services/registrations.service.js';
+import { mailConfigured } from '../services/mail.service.js';
 
 export const adminRoutes = Router();
 
@@ -96,6 +102,31 @@ const trialSchema = z.object({
   summary: z.array(z.string().max(2000)).optional().default([]),
   image: imageSchema.optional().default({}),
   learnMoreLabel: z.string().max(120).optional().default('Learn more about this trial ↗'),
+  // Which centres recruit for this trial. Empty means every published centre.
+  centreIds: z.array(z.string().max(120)).optional().default([]),
+  registration: z
+    .object({
+      enabled: z.boolean().optional().default(true),
+      intro: z.string().max(2000).optional().default(''),
+      consentLabel: z.string().max(500).optional().default(''),
+      consentBody: z.string().max(4000).optional().default(''),
+      centreLabel: z.string().max(200).optional().default(''),
+      successMessage: z.string().max(2000).optional().default(''),
+      questions: z
+        .array(
+          z.object({
+            question: z.string().max(300).optional().default(''),
+            helpText: z.string().max(500).optional().default(''),
+            options: z.array(z.string().max(200)).optional().default([]),
+          }),
+        )
+        .max(30)
+        .optional()
+        .default([]),
+    })
+    .partial()
+    .optional()
+    .default({}),
   detail: z
     .object({
       eyebrow: z.string().max(120).optional().default(''),
@@ -109,6 +140,23 @@ const trialSchema = z.object({
     .partial()
     .optional()
     .default({}),
+});
+
+/** A recruiting centre. The email is where its registrations are sent. */
+const centreSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  region: z.string().max(120).optional().default(''),
+  email: z
+    .string()
+    .trim()
+    .max(254)
+    .refine((v) => v === '' || z.string().email().safeParse(v).success, {
+      message: 'Enter a valid email address, or leave it empty until you have one',
+    })
+    .optional()
+    .default(''),
+  published: z.boolean().optional().default(true),
+  order: z.number().int().optional(),
 });
 
 const reportSchema = z.object({
@@ -156,6 +204,7 @@ const SCHEMAS = {
   faqs: faqSchema,
   news: newsSchema,
   policies: policySchema,
+  centres: centreSchema,
 };
 
 adminRoutes.get('/collections', (req, res) => res.json({ collections: COLLECTION_KEYS }));
@@ -278,4 +327,29 @@ adminRoutes.delete(
   '/enquiries/:id',
   requireRole('admin'),
   asyncHandler(async (req, res) => res.json(await deleteEnquiry(req.params.id))),
+);
+
+/* --------------------------- registrations --------------------------- */
+
+/*
+ * The delivery log. It carries no personal data at all — registrations are
+ * emailed to the centre and never stored — so this answers "did it arrive?",
+ * not "who registered?".
+ */
+adminRoutes.get(
+  '/registrations',
+  asyncHandler(async (req, res) => res.json(await listRegistrations())),
+);
+
+adminRoutes.get(
+  '/registrations/stats',
+  asyncHandler(async (req, res) =>
+    res.json({ ...(await registrationStats()), mailConfigured: mailConfigured() }),
+  ),
+);
+
+adminRoutes.delete(
+  '/registrations/:id',
+  requireRole('admin'),
+  asyncHandler(async (req, res) => res.json(await deleteRegistration(req.params.id))),
 );

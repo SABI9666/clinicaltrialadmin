@@ -322,6 +322,20 @@ export const COLLECTION_SCHEMAS = {
       summary: [''],
       image: { src: '', alt: '' },
       learnMoreLabel: 'Learn more about this trial ↗',
+      centreIds: [],
+      registration: {
+        enabled: true,
+        intro:
+          'Registering interest in this clinical trial is the first step. It does not mean you are enrolled in the clinical trial.',
+        consentLabel:
+          'I have read the information above and consent to the collection and use of my information for study pre-screening.',
+        consentBody:
+          'By completing this initial pre-screening form, you consent to the collection of your responses, including your contact information. All information provided will be held in strict confidence and shared only with the Clinical Study Team. Upon your request, any records held will be deleted.',
+        centreLabel: 'Which centre is the most convenient for you?',
+        successMessage:
+          'Thank you — your registration has been sent to the study team at the centre you chose. They will be in touch.',
+        questions: [],
+      },
       detail: {
         eyebrow: 'Clinical trial overview',
         title: '',
@@ -353,6 +367,12 @@ export const COLLECTION_SCHEMAS = {
         title: 'The detail pop-up',
         blurb: 'What opens when a visitor presses "Learn more" on the card.',
         keys: ['detail'],
+      },
+      {
+        title: 'The registration form',
+        blurb:
+          'The three-step form that opens from the pop-up\u2019s button. A completed form is emailed to the centre the visitor picks \u2014 nothing personal is stored here.',
+        keys: ['centreIds', 'registration'],
       },
     ],
     fields: [
@@ -455,10 +475,118 @@ export const COLLECTION_SCHEMAS = {
             key: 'enquiryPrefill',
             label: 'Text put into the enquiry form',
             type: 'textarea',
-            hint: 'Filled into the visitor\u2019s message when they enquire about this trial.',
+            hint: 'Used only if the registration form below is turned off.',
           },
         ],
       },
+      {
+        key: 'centreIds',
+        label: 'Centres recruiting for this trial',
+        type: 'centrePicker',
+      },
+      {
+        key: 'registration',
+        label: 'Registration form',
+        type: 'group',
+        fields: [
+          {
+            key: 'enabled',
+            label: 'Use the registration form for this trial',
+            type: 'boolean',
+            hint: 'Untick to send the button to the ordinary enquiry form instead.',
+          },
+          {
+            key: 'intro',
+            label: 'Intro under the heading',
+            type: 'textarea',
+            hint: 'Shown on all three steps. Leave empty to use the standard wording.',
+          },
+          {
+            key: 'consentLabel',
+            label: 'Step 1 \u2014 consent tick-box wording',
+            type: 'textarea',
+            hint: 'The visitor cannot continue without ticking this. Leave empty to use the standard wording.',
+          },
+          {
+            key: 'consentBody',
+            label: 'Step 1 \u2014 explanation under the tick-box',
+            type: 'textarea',
+            rows: 6,
+          },
+          {
+            key: 'questions',
+            label: 'Step 3 \u2014 screening questions',
+            type: 'objectList',
+            itemLabel: 'Question',
+            fields: [
+              { key: 'question', label: 'Question', type: 'text' },
+              {
+                key: 'helpText',
+                label: 'Note under the question',
+                type: 'text',
+                hint: 'Optional, e.g. "You need to be between 18 and 80 years old."',
+              },
+              {
+                key: 'options',
+                label: 'Answer choices',
+                type: 'stringList',
+                hint: 'One per row, e.g. Yes / No / Unsure. Leave empty for a free-text box.',
+              },
+            ],
+          },
+          {
+            key: 'centreLabel',
+            label: 'Step 3 \u2014 label above the centre dropdown',
+            type: 'text',
+            hint: 'Leave empty for "Which centre is the most convenient for you?".',
+          },
+          {
+            key: 'successMessage',
+            label: 'Message shown after a successful registration',
+            type: 'textarea',
+            hint: 'Leave empty to use the standard thank-you message.',
+          },
+        ],
+      },
+    ],
+  },
+
+  centres: {
+    title: 'Centres & emails',
+    singular: 'Centre',
+    blurb:
+      'The recruiting centres a visitor can pick when registering, and the address each one\u2019s registrations are emailed to.',
+    where: 'The "Which centre is most convenient for you?" dropdown on the registration form.',
+    steps: [
+      'Add one entry per centre or region, with the email address its registrations should go to.',
+      'When someone registers and picks a centre, their details are emailed to that address and to nobody else. Nothing personal is stored here.',
+      'The email address is only ever used by the server — it is never shown on the public website.',
+      'A centre with no email address set cannot receive registrations, and the visitor is asked to pick another.',
+      'Unpublish a centre (the \u25cf button) to take it out of the dropdown without losing its address.',
+    ],
+    titleField: 'name',
+    blank: { name: '', region: '', email: '', published: true },
+    fields: [
+      {
+        key: 'name',
+        label: 'Centre name',
+        type: 'text',
+        required: true,
+        hint: 'As a visitor should read it, e.g. "Royal North Shore Hospital".',
+      },
+      {
+        key: 'region',
+        label: 'Region / state',
+        type: 'text',
+        hint: 'Shown after the name in the dropdown, e.g. "New South Wales".',
+      },
+      {
+        key: 'email',
+        label: 'Send registrations to this email address',
+        type: 'text',
+        hint: 'Every registration naming this centre is emailed here. Never shown publicly.',
+      },
+      { key: 'published', label: 'Published \u2014 offer this centre to visitors', type: 'boolean' },
     ],
   },
 
@@ -552,4 +680,4 @@ export const COLLECTION_SCHEMAS = {
   },
 };
 
-export const COLLECTION_ORDER = ['trials', 'reports', 'faqs', 'news', 'policies'];
+export const COLLECTION_ORDER = ['trials', 'centres', 'reports', 'faqs', 'news', 'policies'];

@@ -10,6 +10,7 @@ import CollectionEditor from './pages/CollectionEditor.jsx';
 import Media from './pages/Media.jsx';
 import Enquiries from './pages/Enquiries.jsx';
 import Users from './pages/Users.jsx';
+import Registrations from './pages/Registrations.jsx';
 import Toast from './components/Toast.jsx';
 import SideNav from './components/SideNav.jsx';
 
@@ -120,6 +121,9 @@ export default function App() {
         )}
         {view.kind === 'media' && <Media notify={notify} />}
         {view.kind === 'enquiries' && <Enquiries notify={notify} role={user.role} />}
+        {view.kind === 'registrations' && (
+          <Registrations notify={notify} role={user.role} onNavigate={navigate} />
+        )}
         {view.kind === 'users' && <Users notify={notify} currentEmail={user.email} />}
       </main>
 

@@ -673,6 +673,23 @@ button.add { border-style: dashed; width: 100%; }
   margin: 0;
 }
 
+.warn-tag {
+  font-size: 11px;
+  color: #7c2d12;
+  background: #fdf0e6;
+  border-radius: 20px;
+  padding: 1px 8px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+.table code {
+  background: var(--canvas);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12.5px;
+}
+
 /* ------------------------------- guide ----------------------------------- */
 
 .guide-index {
