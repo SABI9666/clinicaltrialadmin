@@ -14,7 +14,8 @@ export const GUIDE = [
     intro:
       'This console controls everything on the public Clinical Trial Access website. Nothing you change is live until you press a Save button, and every change can be edited again afterwards.',
     steps: [
-      'The menu on the left has three parts. "Page sections" is the wording and pictures of the home page, in the order they appear on it. "Content" is the lists — trials, reports, FAQs, news and policies. "Admin" is the enquiry inbox and the user accounts.',
+      'The menu on the left is a short list of headings. Press one — "Trials", "Insights & news", "Home page", "Site setup" — and it opens to show the pages inside it. Only one heading is open at a time, so the menu stays short.',
+      'Each heading holds the things you change together: "Trials" has the trials themselves, the options visitors search by, and the wording around the search.',
       'Open a page, change what you need, then press the blue button at the top right ("Save changes") or, for a new entry, "Create".',
       'A blue "Save changes" button means you have unsaved edits. When it reads "Saved", everything is stored.',
       'Use "View site ↗" on the Overview page to check the result on the real website. Refresh that tab after saving.',
@@ -29,7 +30,7 @@ export const GUIDE = [
     goto: { kind: 'collection', key: 'trials' },
     gotoLabel: 'Open Trials',
     steps: [
-      'Go to Content → Trials. The list on the left shows every trial with a "Live" or "Draft" tag.',
+      'Open "Trials" in the menu, then "All trials". The list shows every trial with a "Live" or "Draft" tag.',
       'To change an existing trial, select it in the list. To add one, press "+ New trial" at the top right.',
       'Fill in "The basics": the trial title, and whether it is published. The web address name fills itself in from the title.',
       'In "How visitors find it", choose the condition, country, states/territories and age range from the dropdowns. These are what the search on the website filters by.',
@@ -46,10 +47,10 @@ export const GUIDE = [
     intro:
       'The four dropdowns on the website — Condition, Country, State / territory and Age range — are one shared list. A trial only appears under a filter when it uses exactly the same option, so options are always picked from this list, never typed freehand.',
     goto: { kind: 'section', key: 'facets' },
-    gotoLabel: 'Open Search filters',
+    gotoLabel: 'Open Search filter options',
     steps: [
       'The quick way, while editing a trial: under "How visitors find it", press "+ Add a new condition" (or country, or state / territory) under the matching dropdown, type the name, and press "Add". It is saved to the site’s filters straight away and selected for the trial you are editing.',
-      'The full way: open Page sections → Search filters, where all four lists live together.',
+      'The full way: open "Trials" in the menu, then "Search filter options", where all four lists live together.',
       'For a condition or an age range, press "+ Add" at the bottom of the list and type it in.',
       'For a country, press "+ Add country", type its name, then press "+ Add" under it for each state or territory.',
       'Press "Save changes" at the top right. The website dropdowns update immediately.',
@@ -72,8 +73,9 @@ export const GUIDE = [
     id: 'sections',
     title: 'Change the wording on the home page',
     intro:
-      'Everything written on the home page is under "Page sections", listed in the same order as the page itself: Hero at the top, Footer at the bottom.',
+      'Open "Home page" in the menu for the blocks down the page — the hero banner at the top, then "Finding a trial", "Why join", "About" and "Contact".',
     steps: [
+      'The header, the footer and the site name are under "Site setup". The wording around the trial search is under "Trials", and the Insights headings under "Insights & news" — each sits with the thing it belongs to.',
       'Pick the section you want from the menu. The note under its title tells you where it appears on the site.',
       'Change the text boxes, then press "Save changes".',
       'Lists of lines — headings, paragraphs, trust badges — have "+ Add" to add one, ↑ ↓ to reorder and ✕ to remove.',
@@ -85,11 +87,11 @@ export const GUIDE = [
     title: 'Pictures',
     intro: 'Pictures are uploaded once and can then be reused anywhere on the site.',
     goto: { kind: 'media' },
-    gotoLabel: 'Open Images',
+    gotoLabel: 'Open Pictures',
     steps: [
       'Wherever you see a picture box, press "Choose or upload…" to pick an existing image or add a new one.',
       'Always write alt text: a short description of what the picture shows, read aloud to visitors using a screen reader.',
-      'Content → Images lists everything uploaded, where you can rename the alt text or delete unused pictures.',
+      'Site setup → Pictures lists everything uploaded, where you can rename the alt text or delete unused ones.',
     ],
   },
   {
@@ -99,7 +101,7 @@ export const GUIDE = [
     goto: { kind: 'enquiries' },
     gotoLabel: 'Open Enquiries',
     steps: [
-      'Admin → Enquiries lists them newest first, with tabs for New, Read and Archived.',
+      '"Enquiries" in the menu lists them newest first, with tabs for New, Read and Archived.',
       'Change an enquiry’s status with the dropdown on it, so the team can see what has been handled.',
       'The Overview page shows how many new enquiries are waiting.',
     ],
@@ -111,7 +113,7 @@ export const GUIDE = [
     steps: [
       'An editor can change all content, pictures and enquiries.',
       'An admin can do all of that, plus add or remove accounts, change passwords and use "Reset to default".',
-      'Admins manage accounts under Admin → Users.',
+      'Admins manage accounts under Site setup → Users.',
     ],
   },
   {
@@ -120,7 +122,7 @@ export const GUIDE = [
     intro: 'The usual causes, in the order worth checking.',
     steps: [
       'A change is not on the website: check you pressed Save, then refresh the website tab.',
-      'A trial is missing from a search: its condition, country, state or age range probably does not match the Search filters list exactly. Open the trial and look for a red warning under the dropdowns.',
+      'A trial is missing from a search: its condition, country, state or age range probably does not match the Search filter options list exactly. Open the trial and look for a red warning under the dropdowns.',
       'A trial is missing from the site entirely: it is likely a Draft. Tick "Published".',
       'You are asked to sign in again: sessions end when you close the tab. Sign back in — nothing saved is lost.',
       'A red message appears when saving: it names the box that needs attention. Required boxes are marked with a red *.',

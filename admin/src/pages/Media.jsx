@@ -63,7 +63,7 @@ export default function Media({ notify }) {
     <>
       <header className="page-head">
         <div>
-          <h1>Images</h1>
+          <h1>Pictures</h1>
           <p className="muted">Upload images once, then pick them in any section.</p>
         </div>
         <div className="page-actions">

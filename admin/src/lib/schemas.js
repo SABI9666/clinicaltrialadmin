@@ -19,7 +19,7 @@ const cta = (key, label) => ({ key, label, type: 'cta' });
 
 export const SECTION_SCHEMAS = {
   settings: {
-    title: 'Site settings',
+    title: 'Header & site name',
     blurb: 'Brand name, the strip across the very top, the menu, and the text search engines show.',
     where: 'The header on every page, plus the browser tab title.',
     steps: [
@@ -64,7 +64,7 @@ export const SECTION_SCHEMAS = {
   },
 
   hero: {
-    title: 'Hero',
+    title: 'Hero banner',
     blurb: 'The big banner visitors see first, at the top of the home page.',
     where: 'Top of the home page, above everything else.',
     steps: [
@@ -105,12 +105,12 @@ export const SECTION_SCHEMAS = {
   },
 
   trialsSection: {
-    title: 'Trials section',
-    blurb: 'The wording around the trial search box. The trials themselves live under Content → Trials.',
+    title: 'Trial search wording',
+    blurb: 'The wording around the trial search box. The trials themselves live under Trials → All trials.',
     where: 'The "Find a clinical trial" block on the home page.',
     steps: [
       'This page only changes words, never which trials are listed.',
-      'To add or edit a trial, go to Content → Trials. To change what the dropdowns offer, go to Search filters.',
+      'To add or edit a trial, go to Trials → All trials. To change what the dropdowns offer, go to Trials → Search filter options.',
       '"No-results" text is what a visitor sees when their search matches nothing.',
     ],
     fields: [
@@ -127,13 +127,13 @@ export const SECTION_SCHEMAS = {
   },
 
   facets: {
-    title: 'Search filters',
+    title: 'Search filter options',
     blurb: 'The master list of conditions, countries, states/territories and age ranges visitors can search by.',
     where: 'The four dropdowns above the trial results on the home page.',
     steps: [
       'These lists fill the site\u2019s search dropdowns — nothing more.',
       'A trial only turns up under a filter when its value matches an entry here exactly, so spelling and capitals matter.',
-      'You can also add an option without coming here: the Trials editor has "+ Add a new condition / country / state or territory" built in, and it saves back to this page.',
+      'You can also add an option without coming here: Trials → All trials has "+ Add a new condition / country / state or territory" built in, and it saves back to this page.',
       'Removing an option here does not delete any trial — it only stops visitors searching by it.',
     ],
     fields: [
@@ -197,11 +197,11 @@ export const SECTION_SCHEMAS = {
   },
 
   insights: {
-    title: 'Insights',
+    title: 'Insights wording',
     blurb: 'The headings above the Reports / FAQs / News tabs.',
     where: 'The "Insights" block on the home page.',
     steps: [
-      'This page sets the wording only. The cards inside the tabs are edited under Content → Reports, FAQs and News.',
+      'This page sets the wording only. The cards inside the tabs are edited under Insights & news → Reports, FAQs and News.',
     ],
     fields: [
       { key: 'eyebrow', label: 'Eyebrow', type: 'text' },
@@ -240,7 +240,7 @@ export const SECTION_SCHEMAS = {
     blurb: 'The words around the enquiry form, and the messages shown after someone sends it.',
     where: 'The "Contact Us" block at the bottom of the home page.',
     steps: [
-      'Submitted enquiries arrive in Admin → Enquiries; this page only changes the wording visitors read.',
+      'Submitted enquiries arrive under "Enquiries" in the menu; this page only changes the wording visitors read.',
       'Keep the medical-advice note in place — it tells visitors the site is not medical advice.',
     ],
     fields: [
@@ -260,7 +260,7 @@ export const SECTION_SCHEMAS = {
     blurb: 'Footer links, legal paragraphs and the copyright line.',
     where: 'The bottom strip of every page.',
     steps: [
-      'A footer link can point at a policy using its slug, e.g. "#privacy" opens the policy whose slug is "privacy" (Content → Policies).',
+      'A footer link can point at a policy using its slug, e.g. "#privacy" opens the policy whose slug is "privacy" (Site setup → Policies).',
     ],
     fields: [
       { key: 'tagline', label: 'Tagline', type: 'textarea' },
@@ -280,7 +280,7 @@ export const SECTION_SCHEMAS = {
   },
 };
 
-/** Order the sections appear in the sidebar. */
+/** Order the sections appear in, used where every section is listed. */
 export const SECTION_ORDER = [
   'settings',
   'hero',
@@ -303,7 +303,7 @@ export const COLLECTION_SCHEMAS = {
     where: 'The result cards under "Find a clinical trial", and the pop-up that opens from "Learn more".',
     steps: [
       'Pick a trial on the left to edit it, or press "+ New trial" to add one.',
-      'Condition, country, states and age range are dropdowns fed by the Search filters page — that is how a visitor finds the trial. If the option you need is missing, use the "+ Add a new …" link right there and it is created for you.',
+      'Condition, country, states and age range are dropdowns fed by the Search filter options page — that is how a visitor finds the trial. If the option you need is missing, use the "+ Add a new …" link right there and it is created for you.',
       'Leave a filter as "Not specified" when it is not confirmed yet: the trial then shows up whatever the visitor picks, rather than being hidden.',
       '"Card paragraphs" are what shows in the list. The "Detail pop-up" panel is what opens when a visitor presses "Learn more".',
       'Nothing is public until you press "Save changes" and the trial is marked Live.',
@@ -341,7 +341,7 @@ export const COLLECTION_SCHEMAS = {
       {
         title: 'How visitors find it',
         blurb:
-          'These four answers decide which searches this trial turns up in. Every option comes from the Search filters page — add a missing one right here and it is saved there too.',
+          'These four answers decide which searches this trial turns up in. Every option comes from the Search filter options page — add a missing one right here and it is saved there too.',
         keys: ['condition', 'country', 'states', 'ageRange'],
       },
       {
