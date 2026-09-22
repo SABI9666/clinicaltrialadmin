@@ -24,7 +24,7 @@ function AddOption({ label, placeholder, hint, onAdd, notify }) {
     setBusy(true);
     try {
       await onAdd(value);
-      notify?.({ type: 'success', message: `"${value}" added to the site's search filters.` });
+      notify?.({ type: 'success', message: `"${value}" added to the site's search filter options.` });
       setText('');
       setOpen(false);
     } catch (err) {
@@ -65,7 +65,7 @@ function AddOption({ label, placeholder, hint, onAdd, notify }) {
 function Mismatch({ value, onFix, noun }) {
   return (
     <p className="field-warning">
-      <strong>"{value}"</strong> is not one of the {noun} in the site's search filters, so this
+      <strong>"{value}"</strong> is not one of the {noun} in the site's search filter options, so this
       trial will not appear when a visitor filters by it.{' '}
       <button type="button" className="link-button" onClick={onFix}>
         Add "{value}" to the filters
@@ -109,7 +109,7 @@ export function OptionPicker({ field, value, onChange, notify }) {
       if (tidy !== v) onChange(tidy);
       notify?.({
         type: 'success',
-        message: `"${tidy}" added to the site's search filters and selected here.`,
+        message: `"${tidy}" added to the site's search filter options and selected here.`,
       });
     } catch (err) {
       notify?.({ type: 'error', message: err.message });
@@ -138,7 +138,7 @@ export function OptionPicker({ field, value, onChange, notify }) {
         <AddOption
           label={field.addLabel ?? `Add a new ${field.label.toLowerCase()}`}
           placeholder={field.addPlaceholder ?? `New ${field.label.toLowerCase()}`}
-          hint="This is added to the site's search filters straight away, so visitors can filter by it."
+          hint="This is added to the site's search filter options straight away, so visitors can filter by it."
           onAdd={async (v) => {
             await add(v);
             onChange(v);
@@ -175,7 +175,7 @@ export function StatePicker({ value, onChange, record, notify }) {
       if (tidy !== state) onChange(chosen.map((s) => (s === state ? tidy : s)));
       notify?.({
         type: 'success',
-        message: `"${tidy}" added to ${country} in the site's search filters.`,
+        message: `"${tidy}" added to ${country} in the site's search filter options.`,
       });
     } catch (err) {
       notify?.({ type: 'error', message: err.message });
@@ -220,7 +220,7 @@ export function StatePicker({ value, onChange, record, notify }) {
       {extras.length > 0 && (
         <p className="field-warning">
           {extras.length === 1 ? 'This state is' : 'These states are'} not listed under {country} in
-          the site's search filters, so {extras.length === 1 ? 'it does' : 'they do'} not narrow a
+          the site's search filter options, so {extras.length === 1 ? 'it does' : 'they do'} not narrow a
           visitor's location search:{' '}
           {extras.map((state, i) => (
             <span key={state}>
@@ -237,7 +237,7 @@ export function StatePicker({ value, onChange, record, notify }) {
         <AddOption
           label={`Add a new state or territory for ${country}`}
           placeholder={`New state or territory in ${country}`}
-          hint={`This is added to ${country} in the site's search filters, then ticked here.`}
+          hint={`This is added to ${country} in the site's search filter options, then ticked here.`}
           onAdd={async (v) => {
             await addState(country, v);
             if (!chosen.includes(v)) onChange([...chosen, v]);

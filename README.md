@@ -89,11 +89,25 @@ works" panel. What follows is the short version for whoever sets it up.
 
 ### What the menu means
 
-| Group             | What it edits                                                      |
-| ----------------- | ------------------------------------------------------------------ |
-| **Page sections** | The wording and pictures of the home page, listed top to bottom.    |
-| **Content**       | The lists visitors browse: trials, reports, FAQs, news, policies.   |
-| **Admin**         | The enquiry inbox, and (admins only) who can sign in.               |
+The sidebar is seven headings; press one to open the pages inside it, and only
+one stays open at a time. Things that are changed together are grouped
+together, whether they are stored as a page section or as a list:
+
+| Heading              | What is inside                                                        |
+| -------------------- | --------------------------------------------------------------------- |
+| **Overview**         | Counts, the four most common jobs, and a link to the guide.           |
+| **How-to guide**     | The written walkthrough of every routine job.                         |
+| **Trials**           | The trials, the options visitors search by, and the search wording.   |
+| **Insights & news**  | Reports, FAQs, News, and the headings above those tabs.               |
+| **Home page**        | The rest of the home page, top to bottom.                             |
+| **Enquiries**        | Messages sent through the contact form.                               |
+| **Site setup**       | Header, footer, pictures, policies, and (admins only) sign-ins.       |
+
+Menu labels and page titles are deliberately the same words, so "Pictures" in
+the menu opens a page headed "Pictures".
+
+The structure lives in `admin/src/lib/nav.js`; adding a page means adding one
+entry there.
 
 ### Trials and the search filters
 

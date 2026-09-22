@@ -26,7 +26,7 @@ const QUICK_ACTIONS = [
   },
   {
     label: 'Change home page wording',
-    detail: 'Headings, paragraphs and buttons.',
+    detail: 'Headings, paragraphs and buttons on the hero banner.',
     target: { kind: 'section', key: 'hero' },
   },
   {
