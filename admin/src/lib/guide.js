@@ -59,6 +59,24 @@ export const GUIDE = [
       'Spelling and capitals must match between a trial and the filter list. If a trial shows a red warning saying its value is "not in the filter list", press the "Add … to the filters" link in that warning to fix it in one step.',
   },
   {
+    id: 'registrations',
+    title: 'Registrations, centres and where the emails go',
+    intro:
+      'When someone presses the button on a trial, a three-step registration form opens. What they fill in is emailed to the centre they choose — it is never stored in this console.',
+    goto: { kind: 'collection', key: 'centres' },
+    gotoLabel: 'Open Centres & emails',
+    steps: [
+      'Open Trials \u2192 Centres & emails and add one entry per centre or region, each with the email address its registrations should go to. That address is never shown on the website.',
+      'Open the trial under Trials \u2192 All trials and scroll to "The registration form". Tick which centres recruit for it, and write the questions you want asked.',
+      'Each question can have answer choices (Yes / No / Unsure) or, with no choices, a plain box for the person to type in.',
+      'A visitor now sees: step 1 consent, step 2 their name, email and phone, step 3 your questions and the centre dropdown.',
+      'On submit, the centre gets an email with their details and answers. When the centre presses Reply, the reply goes straight to the person \u2014 not to you.',
+      'Trials \u2192 Registrations shows that each one was delivered. It holds no personal details at all, only the date, the trial, the centre, and whether the email got through.',
+    ],
+    note:
+      'Nothing is emailed anywhere if a centre has no address saved, so check Centres & emails first. If the Registrations page warns that email sending is not set up, the server still needs its mail settings \u2014 ask whoever deployed it.',
+  },
+  {
     id: 'publish',
     title: 'Publishing, drafts and deleting',
     intro: 'Every trial, report, FAQ, news item and policy is either Live or Draft.',

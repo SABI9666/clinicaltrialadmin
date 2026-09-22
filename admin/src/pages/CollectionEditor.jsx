@@ -350,7 +350,7 @@ export default function CollectionEditor({ collection, notify, onNavigate }) {
               <FieldGroups
                 schema={schema}
                 value={draft}
-                ctx={{ notify, record: draft }}
+                ctx={{ notify, record: draft, onNavigate }}
                 onChange={setField}
               />
             </>

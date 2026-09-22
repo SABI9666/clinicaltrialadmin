@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { mediaUrl } from '../lib/api.js';
 import MediaPicker from './MediaPicker.jsx';
 import { OptionPicker, StatePicker } from './TaxonomyField.jsx';
+import CentrePicker from './CentrePicker.jsx';
 
 /* Immutable helpers so edits never mutate the loaded document in place. */
 const replaceAt = (arr, i, v) => arr.map((item, idx) => (idx === i ? v : item));
@@ -295,6 +296,15 @@ export default function Field({ field, value, onChange, ctx }) {
       case 'taxonomy':
         return (
           <OptionPicker field={field} value={value} onChange={onChange} notify={ctx?.notify} />
+        );
+      case 'centrePicker':
+        return (
+          <CentrePicker
+            value={value}
+            onChange={onChange}
+            notify={ctx?.notify}
+            onNavigate={ctx?.onNavigate}
+          />
         );
       case 'taxonomyStates':
         return (

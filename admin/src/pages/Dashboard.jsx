@@ -11,6 +11,7 @@ const WHAT_IT_IS = {
   faqs: 'Questions under Insights → FAQs.',
   news: 'Updates under Insights → News.',
   policies: 'Privacy, terms and cookie text in the footer.',
+  centres: 'Recruiting centres, and where their registrations are emailed.',
 };
 
 const QUICK_ACTIONS = [
@@ -33,6 +34,11 @@ const QUICK_ACTIONS = [
     label: 'Read the visitor enquiries',
     detail: 'Messages from the contact form.',
     target: { kind: 'enquiries' },
+  },
+  {
+    label: 'Check registrations reached the centres',
+    detail: 'Delivery log \u2014 no personal details kept.',
+    target: { kind: 'registrations' },
   },
 ];
 
