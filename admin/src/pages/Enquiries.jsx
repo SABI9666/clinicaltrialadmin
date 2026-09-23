@@ -19,6 +19,9 @@ export default function Enquiries({ notify, role }) {
   const [stats, setStats] = useState(null);
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState(null);
+  const [notifyEmail, setNotifyEmail] = useState('');
+  const [savingEmail, setSavingEmail] = useState(false);
 
   async function load(status = filter) {
     setLoading(true);
@@ -37,6 +40,38 @@ export default function Enquiries({ notify, role }) {
     load(filter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
+
+  // Loaded once: the address does not change with the status filter.
+  useEffect(() => {
+    api
+      .getEnquirySettings()
+      .then((s) => {
+        setSettings(s);
+        setNotifyEmail(s.notifyEmail);
+      })
+      .catch((err) => notify({ type: 'error', message: err.message }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function saveEmail(e) {
+    e.preventDefault();
+    setSavingEmail(true);
+    try {
+      const saved = await api.saveEnquirySettings({ notifyEmail: notifyEmail.trim() });
+      setSettings(saved);
+      setNotifyEmail(saved.notifyEmail);
+      notify({
+        type: 'success',
+        message: saved.notifyEmail
+          ? `Enquiries will be emailed to ${saved.notifyEmail}.`
+          : 'Email notifications turned off. Enquiries still appear on this page.',
+      });
+    } catch (err) {
+      notify({ type: 'error', message: err.message });
+    } finally {
+      setSavingEmail(false);
+    }
+  }
 
   async function setStatus(item, status) {
     try {
@@ -90,6 +125,45 @@ export default function Enquiries({ notify, role }) {
         )}
       </header>
 
+      <form className="notify-panel" onSubmit={saveEmail}>
+        <div className="notify-copy">
+          <strong>Where enquiries are emailed</strong>
+          <p className="muted small">
+            Every message from the contact form is sent here as it arrives, with the
+            sender in Reply-To so you can answer straight from your inbox. Leave it
+            empty to turn the emails off — enquiries still appear on this page either
+            way, so nothing is lost.
+          </p>
+        </div>
+
+        <div className="notify-field">
+          <label htmlFor="notify-email">Email address</label>
+          <input
+            id="notify-email"
+            type="email"
+            value={notifyEmail}
+            placeholder="enquiries@your-domain.org"
+            onChange={(e) => setNotifyEmail(e.target.value)}
+            disabled={role !== 'admin'}
+          />
+          {role === 'admin' && (
+            <button type="submit" disabled={savingEmail || notifyEmail === settings?.notifyEmail}>
+              {savingEmail ? 'Saving…' : 'Save'}
+            </button>
+          )}
+        </div>
+
+        {role !== 'admin' && (
+          <p className="muted small">Only an admin can change this address.</p>
+        )}
+        {settings && !settings.mailConfigured && (
+          <p className="warn small">
+            Email is not configured on the server, so nothing can be sent yet. Set
+            RESEND_API_KEY and MAIL_FROM on the API and redeploy.
+          </p>
+        )}
+      </form>
+
       <div className="tab-row">
         {STATUSES.map((s) => (
           <button
@@ -120,6 +194,10 @@ export default function Enquiries({ notify, role }) {
                     {item.phone && ` · ${item.phone}`}
                   </div>
                   {item.trialSlug && <div className="badge live">Trial: {item.trialSlug}</div>}
+                  {/* So a mail problem is visible here rather than only in the logs. */}
+                  {item.delivery === 'failed' && (
+                    <div className="badge warn">Email notification failed</div>
+                  )}
                 </div>
                 <div className="enquiry-meta">
                   <span className="muted small">{formatDate(item.createdAt)}</span>

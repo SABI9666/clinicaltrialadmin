@@ -29,6 +29,8 @@ import {
   enquiryStats,
   listEnquiries,
   updateEnquiry,
+  getEnquirySettings,
+  saveEnquirySettings,
 } from '../services/enquiries.service.js';
 import {
   deleteRegistration,
@@ -308,6 +310,34 @@ adminRoutes.get(
 adminRoutes.get(
   '/enquiries/stats',
   asyncHandler(async (req, res) => res.json(await enquiryStats())),
+);
+
+/* Both must be declared before '/enquiries/:id', or Express matches
+ * "settings" as an id and the update handler runs instead. */
+adminRoutes.get(
+  '/enquiries/settings',
+  asyncHandler(async (req, res) => res.json(await getEnquirySettings())),
+);
+
+adminRoutes.put(
+  '/enquiries/settings',
+  requireRole('admin'),
+  asyncHandler(async (req, res) => {
+    const body = z
+      .object({
+        // Empty is allowed and means "do not send notifications", which is how
+        // this is turned off without deleting the address you had.
+        notifyEmail: z
+          .string()
+          .trim()
+          .max(254)
+          .refine((v) => v === '' || z.string().email().safeParse(v).success, {
+            message: 'Enter a valid email address, or leave it empty to turn notifications off',
+          }),
+      })
+      .parse(req.body);
+    res.json(await saveEnquirySettings(body));
+  }),
 );
 
 adminRoutes.put(

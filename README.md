@@ -100,7 +100,7 @@ together, whether they are stored as a page section or as a list:
 | **Trials**           | The trials, recruiting centres and their emails, registration deliveries, the options visitors search by, and the search wording. |
 | **Insights & news**  | Reports, FAQs, News, and the headings above those tabs.               |
 | **Home page**        | The rest of the home page, top to bottom.                             |
-| **Enquiries**        | Messages sent through the contact form.                               |
+| **Enquiries**        | Messages sent through the contact form, and where they are emailed.   |
 | **Site setup**       | Header, footer, pictures, policies, and (admins only) sign-ins.       |
 
 Menu labels and page titles are deliberately the same words, so "Pictures" in
@@ -329,6 +329,28 @@ a strong password and add accounts only for people who need them.
 
 ---
 
+## Contact form enquiries
+
+Enquiries work differently from registrations, deliberately. A registration is
+emailed to its centre and never stored; an enquiry is **stored and also
+emailed**, because it is a conversation you are expected to answer and track.
+
+Set the destination in the admin under **Enquiries** — "Where enquiries are
+emailed". Each message goes there as it arrives with the sender in Reply-To, so
+you answer from your inbox. Leaving the field empty turns the emails off; the
+enquiries still land on the page.
+
+The address is an admin-only setting rather than one of the site's content
+sections. Those are all published through `/api/public/site`, so an inbox kept
+there would sit in a JSON file anyone can read — the same reason a centre's
+address never leaves the server.
+
+A failed send does not fail the enquiry. It is already stored by then, so the
+person gets their confirmation and the enquiry is flagged in the admin as
+undelivered rather than being lost over a mail problem they cannot fix.
+
+---
+
 ## API reference
 
 ### Public (no authentication)
@@ -360,6 +382,7 @@ is not the same as "not eligible".
 | POST   | `/api/admin/collections/:collection/reorder` | Reorder            |
 | GET/POST | `/api/admin/media`                      | List / upload images   |
 | GET    | `/api/admin/enquiries`                    | Enquiry inbox          |
+| GET/PUT| `/api/admin/enquiries/settings`           | Where enquiries are emailed |
 | GET/POST | `/api/auth/users`                       | Manage users (admin)   |
 
 Roles: **editor** can change content; **admin** can also manage users, delete
@@ -377,7 +400,8 @@ Everything visible on the public site:
 - **Content lists** — trials (with their detail dialog), reports, FAQs, news
   and policy documents, each with publish/draft state and ordering.
 - **Images** — upload once, then pick in any section; alt text is editable.
-- **Enquiries** — inbox with status tracking and internal notes.
+- **Enquiries** — inbox with status tracking and internal notes, plus the
+  address a copy of each enquiry is emailed to.
 - **Users** — add editors and admins, reset passwords.
 
 Each section can be reset to the original content from the supplied design.

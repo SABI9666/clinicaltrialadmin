@@ -97,6 +97,9 @@ export const api = {
   listEnquiries: (status) =>
     request(`/api/admin/enquiries${status ? `?status=${encodeURIComponent(status)}` : ''}`),
   enquiryStats: () => request('/api/admin/enquiries/stats'),
+  getEnquirySettings: () => request('/api/admin/enquiries/settings'),
+  saveEnquirySettings: (value) =>
+    request('/api/admin/enquiries/settings', { method: 'PUT', body: value }),
   updateEnquiry: (id, patch) => request(`/api/admin/enquiries/${id}`, { method: 'PUT', body: patch }),
   removeEnquiry: (id) => request(`/api/admin/enquiries/${id}`, { method: 'DELETE' }),
 

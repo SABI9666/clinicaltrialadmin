@@ -830,3 +830,36 @@ button.add { border-style: dashed; width: 100%; }
   .help-body { padding-left: 16px; }
   .checklist { grid-template-columns: 1fr; }
 }
+
+/* ------------------ where enquiries are emailed ------------------ */
+
+.notify-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  padding: 18px 20px;
+  margin: 0 0 20px;
+}
+.notify-copy strong { display: block; font-size: 14px; margin-bottom: 4px; }
+.notify-copy p { margin: 0 0 14px; max-width: 70ch; }
+
+.notify-field { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.notify-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.notify-field input {
+  flex: 1 1 280px;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid #ccdae7;
+  border-radius: 7px;
+}
+.notify-field button { flex: none; }
+
+/* Marks an enquiry whose notification did not go out, so a mail problem is
+ * visible next to the message rather than only in the server logs. */
+.badge.warn { background: #fdf0d5; color: #8a5a00; }
+p.warn { color: #8a5a00; margin: 12px 0 0; }
