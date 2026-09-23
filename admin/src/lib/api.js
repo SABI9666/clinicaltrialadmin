@@ -94,14 +94,13 @@ export const api = {
   updateMedia: (id, alt) => request(`/api/admin/media/${id}`, { method: 'PUT', body: { alt } }),
   removeMedia: (id) => request(`/api/admin/media/${id}`, { method: 'DELETE' }),
 
-  listEnquiries: (status) =>
-    request(`/api/admin/enquiries${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+  listEnquiries: () => request('/api/admin/enquiries'),
   enquiryStats: () => request('/api/admin/enquiries/stats'),
   getEnquirySettings: () => request('/api/admin/enquiries/settings'),
   saveEnquirySettings: (value) =>
     request('/api/admin/enquiries/settings', { method: 'PUT', body: value }),
-  updateEnquiry: (id, patch) => request(`/api/admin/enquiries/${id}`, { method: 'PUT', body: patch }),
-  removeEnquiry: (id) => request(`/api/admin/enquiries/${id}`, { method: 'DELETE' }),
+  legacyEnquiries: () => request('/api/admin/enquiries/legacy'),
+  purgeLegacyEnquiries: () => request('/api/admin/enquiries/legacy', { method: 'DELETE' }),
 
   listRegistrations: () => request('/api/admin/registrations'),
   registrationStats: () => request('/api/admin/registrations/stats'),

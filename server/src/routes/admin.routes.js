@@ -24,13 +24,12 @@ import {
   uploadImage,
 } from '../services/storage.service.js';
 import {
-  ENQUIRY_STATUSES,
-  deleteEnquiry,
+  listEnquiryDeliveries,
   enquiryStats,
-  listEnquiries,
-  updateEnquiry,
   getEnquirySettings,
   saveEnquirySettings,
+  legacyEnquirySummary,
+  purgeLegacyEnquiries,
 } from '../services/enquiries.service.js';
 import {
   deleteRegistration,
@@ -297,14 +296,13 @@ adminRoutes.delete(
 
 /* ---------------------------- enquiries ---------------------------- */
 
+/*
+ * Enquiries are emailed and never stored, so this is a delivery log rather
+ * than an inbox: it answers "did it arrive?", never "who wrote in".
+ */
 adminRoutes.get(
   '/enquiries',
-  asyncHandler(async (req, res) => {
-    const { status } = z
-      .object({ status: z.enum(ENQUIRY_STATUSES).optional() })
-      .parse(req.query);
-    res.json(await listEnquiries({ status }));
-  }),
+  asyncHandler(async (req, res) => res.json(await listEnquiryDeliveries())),
 );
 
 adminRoutes.get(
@@ -312,8 +310,9 @@ adminRoutes.get(
   asyncHandler(async (req, res) => res.json(await enquiryStats())),
 );
 
-/* Both must be declared before '/enquiries/:id', or Express matches
- * "settings" as an id and the update handler runs instead. */
+/* No '/enquiries/:id' route exists any more — there is no enquiry to address
+ * by id — but these stay grouped so a later one cannot be added above them and
+ * start swallowing "settings" and "legacy" as ids. */
 adminRoutes.get(
   '/enquiries/settings',
   asyncHandler(async (req, res) => res.json(await getEnquirySettings())),
@@ -325,38 +324,26 @@ adminRoutes.put(
   asyncHandler(async (req, res) => {
     const body = z
       .object({
-        // Empty is allowed and means "do not send notifications", which is how
-        // this is turned off without deleting the address you had.
-        notifyEmail: z
-          .string()
-          .trim()
-          .max(254)
-          .refine((v) => v === '' || z.string().email().safeParse(v).success, {
-            message: 'Enter a valid email address, or leave it empty to turn notifications off',
-          }),
+        // An address is required now: with nothing stored, an empty one would
+        // mean the form has nowhere to deliver and must refuse submissions.
+        notifyEmail: z.string().trim().max(254).email('Enter a valid email address'),
       })
       .parse(req.body);
     res.json(await saveEnquirySettings(body));
   }),
 );
 
-adminRoutes.put(
-  '/enquiries/:id',
-  asyncHandler(async (req, res) => {
-    const body = z
-      .object({
-        status: z.enum(ENQUIRY_STATUSES).optional(),
-        notes: z.string().max(4000).optional(),
-      })
-      .parse(req.body);
-    res.json(await updateEnquiry(req.params.id, body));
-  }),
+/* Enquiries captured before the form became send-only. Summary and purge
+ * only — listing them would put the personal details back on a screen. */
+adminRoutes.get(
+  '/enquiries/legacy',
+  asyncHandler(async (req, res) => res.json(await legacyEnquirySummary())),
 );
 
 adminRoutes.delete(
-  '/enquiries/:id',
+  '/enquiries/legacy',
   requireRole('admin'),
-  asyncHandler(async (req, res) => res.json(await deleteEnquiry(req.params.id))),
+  asyncHandler(async (req, res) => res.json(await purgeLegacyEnquiries())),
 );
 
 /* --------------------------- registrations --------------------------- */

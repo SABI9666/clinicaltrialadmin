@@ -863,3 +863,22 @@ button.add { border-style: dashed; width: 100%; }
  * visible next to the message rather than only in the server logs. */
 .badge.warn { background: #fdf0d5; color: #8a5a00; }
 p.warn { color: #8a5a00; margin: 12px 0 0; }
+
+/* ------------------- enquiries kept from the old behaviour ---------------- */
+
+/* Enquiries kept from before the form became send-only. Deliberately loud:
+ * it is personal data sitting in the database that nobody asked to keep. */
+.legacy-panel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  border: 1px solid #e7cf9a;
+  background: #fdf7e8;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin: 0 0 20px;
+}
+.legacy-panel p { margin: 4px 0 0; max-width: 72ch; }
+.legacy-panel button { flex: none; }

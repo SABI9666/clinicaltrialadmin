@@ -1,10 +1,10 @@
 /**
- * Emailing enquiries to a configured address.
+ * Contact form enquiries: emailed, never stored.
  *
- * The address is an admin-only setting on purpose: the site's content sections
- * are all published through /api/public/site, so keeping it out of them is what
- * stops the inbox being scraped. That is the main thing these cover, alongside
- * the rule that a mail failure must never cost someone their enquiry.
+ * Two promises are under test. Nothing a person writes reaches the database —
+ * the email is the only copy — and the address it goes to is an admin-only
+ * setting, kept out of the content sections that /api/public/site publishes so
+ * the inbox cannot be scraped off the site.
  */
 import { test, before, after, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -129,22 +129,19 @@ describe('the notification address', () => {
 
   test('refuses something that is not an address', async () => {
     assert.equal((await setAddress('not-an-email')).status, 400);
-    // The bad value must not have replaced the good one.
     const read = await (await api('/api/admin/enquiries/settings', { auth: true })).json();
-    assert.equal(read.notifyEmail, 'team@example.org');
+    assert.equal(read.notifyEmail, 'team@example.org', 'the good value must survive');
   });
 
-  test('is not confused with an enquiry id by the router', async () => {
-    // '/enquiries/settings' and '/enquiries/:id' share a shape; if the id route
-    // were declared first, saving the address would try to update an enquiry.
+  test('is not read as an enquiry id by the router', async () => {
     const res = await api('/api/admin/enquiries/settings', { auth: true });
     assert.equal(res.status, 200);
     assert.ok('notifyEmail' in (await res.json()));
   });
 });
 
-describe('delivering an enquiry', () => {
-  test('emails it, with the enquirer in Reply-To', async () => {
+describe('an enquiry', () => {
+  test('is emailed, with the enquirer in Reply-To', async () => {
     await setAddress('team@example.org');
     const before = sent.length;
 
@@ -163,43 +160,116 @@ describe('delivering an enquiry', () => {
     }
   });
 
-  test('still records it, so the inbox is not the only copy', async () => {
-    const list = await (await api('/api/admin/enquiries', { auth: true })).json();
-    const latest = list.find((e) => e.email === 'grace@example.com');
-    assert.ok(latest, 'the enquiry should be stored as well as sent');
-    assert.equal(latest.delivery, 'sent');
+  test('leaves nothing personal anywhere in the database', async () => {
+    await api('/api/public/enquiries', {
+      method: 'POST',
+      body: JSON.stringify(enquiry({ email: 'unique-canary@example.com', name: 'Canary Person' })),
+    });
+
+    const store = await getStore();
+    for (const collection of ['enquiry_deliveries', 'enquiries', 'registrations', 'admin_settings']) {
+      const serialised = JSON.stringify(await store.listDocs(collection));
+      for (const value of ['unique-canary@example.com', 'Canary Person', 'Could you tell me more']) {
+        assert.equal(
+          serialised.includes(value),
+          false,
+          `${collection} must not hold "${value}"`,
+        );
+      }
+    }
   });
 
-  test('keeps the enquiry when the send fails, and marks it', async () => {
+  test('is recorded as delivered, with no personal field on the record', async () => {
+    const list = await (await api('/api/admin/enquiries', { auth: true })).json();
+    assert.ok(list.length > 0);
+
+    const keys = new Set(list.flatMap((r) => Object.keys(r)));
+    for (const key of ['name', 'email', 'phone', 'message', 'country', 'notes']) {
+      assert.equal(keys.has(key), false, `the log must not carry ${key}`);
+    }
+    assert.equal(list[0].delivery, 'sent');
+  });
+
+  test('is refused, not silently dropped, when the send fails', async () => {
     resendFails = true;
     const res = await api('/api/public/enquiries', {
       method: 'POST',
-      body: JSON.stringify(enquiry({ email: 'ada@example.com', name: 'Ada Lovelace' })),
+      body: JSON.stringify(enquiry({ email: 'ada@example.com' })),
     });
     resendFails = false;
 
-    // A mail problem is ours, not theirs — the person must not be told their
-    // message failed when it is safely stored.
-    assert.equal(res.status, 201);
+    // Nothing is stored, so a thank-you here would lose the person entirely.
+    assert.equal(res.status, 502);
+    assert.match((await res.json()).error, /could not be sent/i);
 
-    const list = await (await api('/api/admin/enquiries', { auth: true })).json();
-    const failed = list.find((e) => e.email === 'ada@example.com');
-    assert.ok(failed, 'the enquiry must survive a failed notification');
-    assert.equal(failed.delivery, 'failed', 'and be marked so it is noticed');
+    const store = await getStore();
+    const failed = (await store.listDocs('enquiry_deliveries')).filter((r) => r.delivery === 'failed');
+    assert.equal(failed.length, 1, 'the failure should be recorded for someone to notice');
+    assert.equal(JSON.stringify(failed).includes('ada@example.com'), false);
   });
 
-  test('sends nothing when no address is set, and still records', async () => {
-    await setAddress('');
+  test('is refused when no address is set, rather than going nowhere', async () => {
+    const store = await getStore();
+    await store.setDoc('admin_settings', 'enquiries', { notifyEmail: '' });
     const before = sent.length;
 
     const res = await api('/api/public/enquiries', {
       method: 'POST',
-      body: JSON.stringify(enquiry({ email: 'turing@example.com', name: 'Alan Turing' })),
+      body: JSON.stringify(enquiry({ email: 'turing@example.com' })),
     });
-    assert.equal(res.status, 201);
-    assert.equal(sent.length, before, 'an empty address means notifications are off');
 
-    const list = await (await api('/api/admin/enquiries', { auth: true })).json();
-    assert.equal(list.find((e) => e.email === 'turing@example.com').delivery, 'off');
+    assert.equal(res.status, 503);
+    assert.match((await res.json()).error, /temporarily unavailable/i);
+    assert.equal(sent.length, before);
+
+    await setAddress('team@example.org');
+  });
+
+  test('accepts a bot silently and sends nothing', async () => {
+    const before = sent.length;
+    const res = await api('/api/public/enquiries', {
+      method: 'POST',
+      body: JSON.stringify(enquiry({ company: 'Spam Co' })),
+    });
+
+    assert.equal(res.status, 202, 'a bot should learn nothing from the response');
+    assert.equal(sent.length, before);
+  });
+});
+
+describe('enquiries kept from the old behaviour', () => {
+  test('are counted, but their contents are not served', async () => {
+    const store = await getStore();
+    await store.addDoc('enquiries', {
+      name: 'Old Record',
+      email: 'old@example.com',
+      message: 'Written before the form stopped storing messages',
+    });
+
+    const res = await api('/api/admin/enquiries/legacy', { auth: true });
+    const summary = await res.json();
+
+    assert.equal(summary.count, 1);
+    assert.equal(
+      JSON.stringify(summary).includes('old@example.com'),
+      false,
+      'a summary, not the records — listing them would put the details back on a screen',
+    );
+  });
+
+  test('are erased on request', async () => {
+    const res = await api('/api/admin/enquiries/legacy', { method: 'DELETE', auth: true });
+    assert.equal((await res.json()).deleted, 1);
+
+    const store = await getStore();
+    assert.equal((await store.listDocs('enquiries')).length, 0);
+    assert.equal(
+      (await (await api('/api/admin/enquiries/legacy', { auth: true })).json()).count,
+      0,
+    );
+  });
+
+  test('cannot be erased without a signed-in admin', async () => {
+    assert.equal((await api('/api/admin/enquiries/legacy', { method: 'DELETE' })).status, 401);
   });
 });

@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 
-const STATUSES = [
-  { value: '', label: 'All' },
-  { value: 'new', label: 'New' },
-  { value: 'in_progress', label: 'In progress' },
-  { value: 'closed', label: 'Closed' },
-];
+/**
+ * Enquiries — a delivery log, not an inbox.
+ *
+ * Contact form messages are emailed to the address set below and are never
+ * stored, so there is nothing here to read: only whether each one arrived.
+ * What people write lives in the recipient's mailbox, which is the point.
+ */
 
 const formatDate = (iso) => {
   if (!iso) return '';
@@ -17,18 +18,23 @@ const formatDate = (iso) => {
 export default function Enquiries({ notify, role }) {
   const [items, setItems] = useState([]);
   const [stats, setStats] = useState(null);
-  const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState(null);
   const [notifyEmail, setNotifyEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
+  const [legacy, setLegacy] = useState(null);
 
-  async function load(status = filter) {
+  async function load() {
     setLoading(true);
     try {
-      const [list, s] = await Promise.all([api.listEnquiries(status || undefined), api.enquiryStats()]);
+      const [list, s, legacySummary] = await Promise.all([
+        api.listEnquiries(),
+        api.enquiryStats(),
+        api.legacyEnquiries(),
+      ]);
       setItems(list);
       setStats(s);
+      setLegacy(legacySummary);
     } catch (err) {
       notify({ type: 'error', message: err.message });
     } finally {
@@ -37,12 +43,7 @@ export default function Enquiries({ notify, role }) {
   }
 
   useEffect(() => {
-    load(filter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
-
-  // Loaded once: the address does not change with the status filter.
-  useEffect(() => {
+    load();
     api
       .getEnquirySettings()
       .then((s) => {
@@ -60,12 +61,7 @@ export default function Enquiries({ notify, role }) {
       const saved = await api.saveEnquirySettings({ notifyEmail: notifyEmail.trim() });
       setSettings(saved);
       setNotifyEmail(saved.notifyEmail);
-      notify({
-        type: 'success',
-        message: saved.notifyEmail
-          ? `Enquiries will be emailed to ${saved.notifyEmail}.`
-          : 'Email notifications turned off. Enquiries still appear on this page.',
-      });
+      notify({ type: 'success', message: `Enquiries will be emailed to ${saved.notifyEmail}.` });
     } catch (err) {
       notify({ type: 'error', message: err.message });
     } finally {
@@ -73,50 +69,43 @@ export default function Enquiries({ notify, role }) {
     }
   }
 
-  async function setStatus(item, status) {
+  async function purge() {
+    if (
+      !confirm(
+        `Permanently delete ${legacy.count} stored enquir${legacy.count === 1 ? 'y' : 'ies'}, ` +
+          'including the names, addresses and messages in them? This cannot be undone.',
+      )
+    ) {
+      return;
+    }
     try {
-      await api.updateEnquiry(item.id, { status });
-      await load();
+      const { deleted } = await api.purgeLegacyEnquiries();
+      setLegacy({ count: 0 });
+      notify({ type: 'success', message: `Deleted ${deleted} stored enquiries.` });
     } catch (err) {
       notify({ type: 'error', message: err.message });
     }
   }
 
-  async function saveNotes(item, notes) {
-    if (notes === (item.notes ?? '')) return;
-    try {
-      await api.updateEnquiry(item.id, { notes });
-      setItems((cur) => cur.map((i) => (i.id === item.id ? { ...i, notes } : i)));
-    } catch (err) {
-      notify({ type: 'error', message: err.message });
-    }
-  }
-
-  async function remove(item) {
-    if (!confirm(`Delete the enquiry from ${item.name}? This cannot be undone.`)) return;
-    try {
-      await api.removeEnquiry(item.id);
-      await load();
-      notify({ type: 'success', message: 'Enquiry deleted.' });
-    } catch (err) {
-      notify({ type: 'error', message: err.message });
-    }
-  }
+  const noAddress = settings && !settings.notifyEmail;
 
   return (
     <>
       <header className="page-head">
         <div>
           <h1>Enquiries</h1>
-          <p className="muted">Messages submitted through the website contact form.</p>
+          <p className="muted">
+            Contact form messages are emailed to you and never stored here, so this page
+            records only whether each one arrived.
+          </p>
         </div>
         {stats && (
           <div className="stat-row">
             <span>
-              <strong>{stats.new}</strong> new
+              <strong>{stats.sent}</strong> delivered
             </span>
             <span>
-              <strong>{stats.in_progress}</strong> in progress
+              <strong>{stats.failed}</strong> failed
             </span>
             <span>
               <strong>{stats.total}</strong> total
@@ -129,10 +118,9 @@ export default function Enquiries({ notify, role }) {
         <div className="notify-copy">
           <strong>Where enquiries are emailed</strong>
           <p className="muted small">
-            Every message from the contact form is sent here as it arrives, with the
-            sender in Reply-To so you can answer straight from your inbox. Leave it
-            empty to turn the emails off — enquiries still appear on this page either
-            way, so nothing is lost.
+            Every message from the contact form is sent here as it arrives, with the sender
+            in Reply-To so you can answer straight from your inbox. This email is the only
+            copy — nothing a person writes is kept on the website or in this console.
           </p>
         </div>
 
@@ -153,81 +141,79 @@ export default function Enquiries({ notify, role }) {
           )}
         </div>
 
-        {role !== 'admin' && (
-          <p className="muted small">Only an admin can change this address.</p>
+        {role !== 'admin' && <p className="muted small">Only an admin can change this address.</p>}
+
+        {/* Without somewhere to send them, the form has nowhere to put a message
+            at all — so this is a broken contact form, not a preference. */}
+        {noAddress && (
+          <p className="warn small">
+            No address is set, so the contact form is turned off — it tells visitors it is
+            temporarily unavailable rather than accepting messages that would go nowhere.
+          </p>
         )}
         {settings && !settings.mailConfigured && (
           <p className="warn small">
-            Email is not configured on the server, so nothing can be sent yet. Set
-            RESEND_API_KEY and MAIL_FROM on the API and redeploy.
+            Email is not configured on the server, so nothing can be sent. Set RESEND_API_KEY
+            and MAIL_FROM on the API and redeploy.
           </p>
         )}
       </form>
 
-      <div className="tab-row">
-        {STATUSES.map((s) => (
-          <button
-            key={s.value}
-            type="button"
-            className={filter === s.value ? 'active' : ''}
-            onClick={() => setFilter(s.value)}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      {legacy?.count > 0 && (
+        <div className="legacy-panel">
+          <div>
+            <strong>
+              {legacy.count} enquir{legacy.count === 1 ? 'y' : 'ies'} still stored from before
+            </strong>
+            <p className="muted small">
+              These were recorded when the form saved messages, so they still hold names,
+              addresses and what people wrote — between {formatDate(legacy.oldest)} and{' '}
+              {formatDate(legacy.newest)}. They are not shown here, because displaying them
+              would undo the point. Delete them to finish clearing personal data out.
+            </p>
+          </div>
+          {role === 'admin' ? (
+            <button type="button" className="danger" onClick={purge}>
+              Delete them permanently
+            </button>
+          ) : (
+            <p className="muted small">Only an admin can delete these.</p>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <p className="muted">Loading…</p>
       ) : items.length === 0 ? (
-        <p className="muted">No enquiries {filter ? `with status "${filter}"` : 'yet'}.</p>
+        <p className="muted">No enquiries have been sent yet.</p>
       ) : (
-        <div className="enquiry-list">
-          {items.map((item) => (
-            <article className="enquiry" key={item.id}>
-              <header>
-                <div>
-                  <strong>{item.name}</strong>
-                  <span className="muted small"> · {item.country}</span>
-                  <div className="muted small">
-                    <a href={`mailto:${item.email}`}>{item.email}</a>
-                    {item.phone && ` · ${item.phone}`}
-                  </div>
-                  {item.trialSlug && <div className="badge live">Trial: {item.trialSlug}</div>}
-                  {/* So a mail problem is visible here rather than only in the logs. */}
-                  {item.delivery === 'failed' && (
-                    <div className="badge warn">Email notification failed</div>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Trial</th>
+              <th>Delivery</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id}>
+                <td>{formatDate(item.createdAt)}</td>
+                <td>{item.trialSlug || '—'}</td>
+                <td>
+                  {item.delivery === 'sent' ? (
+                    <span className="badge live">Delivered</span>
+                  ) : (
+                    <>
+                      <span className="badge warn">Failed</span>
+                      {item.error && <div className="muted small">{item.error}</div>}
+                    </>
                   )}
-                </div>
-                <div className="enquiry-meta">
-                  <span className="muted small">{formatDate(item.createdAt)}</span>
-                  <select value={item.status} onChange={(e) => setStatus(item, e.target.value)}>
-                    <option value="new">New</option>
-                    <option value="in_progress">In progress</option>
-                    <option value="closed">Closed</option>
-                  </select>
-                  {role === 'admin' && (
-                    <button type="button" className="danger" onClick={() => remove(item)}>
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </header>
-
-              <p className="enquiry-message">{item.message}</p>
-
-              <label className="field">
-                <span className="field-label">Internal notes</span>
-                <textarea
-                  rows={2}
-                  defaultValue={item.notes ?? ''}
-                  placeholder="Not shown to the enquirer"
-                  onBlur={(e) => saveNotes(item, e.target.value)}
-                />
-              </label>
-            </article>
-          ))}
-        </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </>
   );

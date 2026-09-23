@@ -237,48 +237,49 @@ describe('sections', () => {
 });
 
 describe('enquiries', () => {
-  test('accepts a valid enquiry', async () => {
-    const res = await api('/api/public/enquiries', {
-      method: 'POST',
-      body: JSON.stringify({
-        name: 'Jane',
-        country: 'Australia',
-        email: 'jane@example.com',
-        message: 'Please tell me more.',
-      }),
-    });
-    assert.equal(res.status, 201);
+  /*
+   * The contact form emails and stores nothing, so it needs somewhere to send
+   * to before it can accept anything. Without an address it refuses, which is
+   * what the first test here pins down.
+   */
+  const enquiry = (patch = {}) => ({
+    name: 'Jane',
+    country: 'Australia',
+    email: 'jane@example.com',
+    message: 'Please tell me more.',
+    ...patch,
   });
 
-  test('rejects a bad email', async () => {
-    const res = await api('/api/public/enquiries', {
-      method: 'POST',
-      body: JSON.stringify({ name: 'J', country: 'AU', email: 'not-an-email', message: 'hi' }),
-    });
-    assert.equal(res.status, 400);
+  const post = (body) =>
+    api('/api/public/enquiries', { method: 'POST', body: JSON.stringify(body) });
+
+  test('refuses while no delivery address is set', async () => {
+    const res = await post(enquiry());
+    assert.equal(res.status, 503, 'accepting it would put the message nowhere');
+    assert.match((await res.json()).error, /temporarily unavailable/i);
+  });
+
+  test('rejects a bad email before anything else', async () => {
+    assert.equal((await post(enquiry({ email: 'not-an-email' }))).status, 400);
   });
 
   test('silently drops a honeypot submission', async () => {
-    const before = (await (await api('/api/admin/enquiries/stats', { auth: true })).json()).total;
-    const res = await api('/api/public/enquiries', {
-      method: 'POST',
-      body: JSON.stringify({
-        name: 'Bot',
-        country: 'AU',
-        email: 'bot@example.com',
-        message: 'spam',
-        company: 'filled-in',
-      }),
-    });
+    const stats = () => api('/api/admin/enquiries/stats', { auth: true }).then((r) => r.json());
+    const before = (await stats()).total;
+
+    const res = await post(enquiry({ name: 'Bot', message: 'spam', company: 'filled-in' }));
     assert.equal(res.status, 202);
-    const after = (await (await api('/api/admin/enquiries/stats', { auth: true })).json()).total;
-    assert.equal(after, before, 'honeypot submission must not be stored');
+
+    assert.equal((await stats()).total, before, 'a bot must leave no trace');
   });
 
-  test('lists enquiries for an admin only', async () => {
+  test('the delivery log needs an admin, and holds nothing personal', async () => {
     assert.equal((await api('/api/admin/enquiries')).status, 401);
+
     const list = await (await api('/api/admin/enquiries', { auth: true })).json();
-    assert.ok(list.length >= 1);
-    assert.equal(list[0].status, 'new');
+    const keys = new Set(list.flatMap((r) => Object.keys(r)));
+    for (const key of ['name', 'email', 'phone', 'message', 'country']) {
+      assert.equal(keys.has(key), false, `the log must not carry ${key}`);
+    }
   });
 });

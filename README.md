@@ -100,7 +100,7 @@ together, whether they are stored as a page section or as a list:
 | **Trials**           | The trials, recruiting centres and their emails, registration deliveries, the options visitors search by, and the search wording. |
 | **Insights & news**  | Reports, FAQs, News, and the headings above those tabs.               |
 | **Home page**        | The rest of the home page, top to bottom.                             |
-| **Enquiries**        | Messages sent through the contact form, and where they are emailed.   |
+| **Enquiries**        | Where contact form messages are emailed, and whether each arrived.    |
 | **Site setup**       | Header, footer, pictures, policies, and (admins only) sign-ins.       |
 
 Menu labels and page titles are deliberately the same words, so "Pictures" in
@@ -331,23 +331,36 @@ a strong password and add accounts only for people who need them.
 
 ## Contact form enquiries
 
-Enquiries work differently from registrations, deliberately. A registration is
-emailed to its centre and never stored; an enquiry is **stored and also
-emailed**, because it is a conversation you are expected to answer and track.
+Enquiries work exactly like registrations: **nothing a person writes is
+stored.** The message is emailed to the address set in the admin under
+**Enquiries** — "Where enquiries are emailed" — with the sender in Reply-To,
+and then discarded. That email is the only copy, so the console holds no
+personal data to leak, export or erase on request.
 
-Set the destination in the admin under **Enquiries** — "Where enquiries are
-emailed". Each message goes there as it arrives with the sender in Reply-To, so
-you answer from your inbox. Leaving the field empty turns the emails off; the
-enquiries still land on the page.
+Because there is no second copy, every failure is reported rather than
+swallowed:
+
+- **No address set** → the form refuses with a 503 and tells the visitor it is
+  temporarily unavailable. Accepting a message with nowhere to put it would
+  lose it silently, so an address is required, not optional.
+- **The send fails** → 502, and the person is asked to try again. They are
+  never thanked for a message that went nowhere.
 
 The address is an admin-only setting rather than one of the site's content
 sections. Those are all published through `/api/public/site`, so an inbox kept
 there would sit in a JSON file anyone can read — the same reason a centre's
 address never leaves the server.
 
-A failed send does not fail the enquiry. It is already stored by then, so the
-person gets their confirmation and the enquiry is flagged in the admin as
-undelivered rather than being lost over a mail problem they cannot fix.
+What the Enquiries page shows is a delivery log with no personal data in it:
+when, which trial the enquiry named if any, and whether the email got through.
+
+### Enquiries stored under the old behaviour
+
+The contact form used to save messages. Any it stored are still in the
+database, and the Enquiries page shows a count of them with a button to delete
+them permanently. Only the count and date range are shown — displaying the
+records would put the personal details back on a screen, which is the thing
+being undone.
 
 ---
 
@@ -381,12 +394,13 @@ is not the same as "not eligible".
 | PUT/DELETE | `/api/admin/collections/:collection/:id` | Update / delete    |
 | POST   | `/api/admin/collections/:collection/reorder` | Reorder            |
 | GET/POST | `/api/admin/media`                      | List / upload images   |
-| GET    | `/api/admin/enquiries`                    | Enquiry inbox          |
+| GET    | `/api/admin/enquiries`                    | Enquiry delivery log   |
 | GET/PUT| `/api/admin/enquiries/settings`           | Where enquiries are emailed |
+| GET/DELETE | `/api/admin/enquiries/legacy`         | Count / erase pre-change records |
 | GET/POST | `/api/auth/users`                       | Manage users (admin)   |
 
-Roles: **editor** can change content; **admin** can also manage users, delete
-enquiries and reset sections.
+Roles: **editor** can change content; **admin** can also manage users, set the
+enquiry address, erase pre-change enquiries and reset sections.
 
 ---
 
@@ -400,8 +414,8 @@ Everything visible on the public site:
 - **Content lists** — trials (with their detail dialog), reports, FAQs, news
   and policy documents, each with publish/draft state and ordering.
 - **Images** — upload once, then pick in any section; alt text is editable.
-- **Enquiries** — inbox with status tracking and internal notes, plus the
-  address a copy of each enquiry is emailed to.
+- **Enquiries** — the address contact form messages are emailed to, and a
+  delivery log. The messages themselves are never stored.
 - **Users** — add editors and admins, reset passwords.
 
 Each section can be reset to the original content from the supplied design.

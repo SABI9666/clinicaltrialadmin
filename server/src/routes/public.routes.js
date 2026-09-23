@@ -8,7 +8,7 @@ import {
   listItems,
   listPublicCentres,
 } from '../services/content.service.js';
-import { createEnquiry } from '../services/enquiries.service.js';
+import { submitEnquiry } from '../services/enquiries.service.js';
 import { submitRegistration } from '../services/registrations.service.js';
 
 export const publicRoutes = Router();
@@ -95,10 +95,10 @@ publicRoutes.post(
   asyncHandler(async (req, res) => {
     const body = enquirySchema.parse(req.body);
     if (body.company) return res.status(202).json({ received: true }); // silently drop bots
-    await createEnquiry({
-      ...body,
-      userAgent: req.get('user-agent') ?? '',
-    });
+
+    // The email is the only copy — nothing here is stored — so a failure has
+    // to reach the person rather than being swallowed behind a thank-you.
+    await submitEnquiry(body);
     res.status(201).json({ received: true });
   }),
 );
