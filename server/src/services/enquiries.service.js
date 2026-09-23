@@ -48,9 +48,9 @@ export async function saveEnquirySettings({ notifyEmail }) {
 }
 
 /** The message whoever handles enquiries receives. */
-function compose({ name, country, email, phone, message, trialSlug }) {
+function compose({ ref, name, country, email, phone, message, trialSlug }) {
   const lines = [
-    'A new enquiry has come in through the website.',
+    `A new enquiry has come in through the website. Reference ${ref}.`,
     '',
     `Name:    ${name}`,
     `Email:   ${email}`,
@@ -66,13 +66,35 @@ function compose({ name, country, email, phone, message, trialSlug }) {
     'This message is the only copy. Nothing from this enquiry is stored on the',
     'website or in the admin console.',
   ];
-  return { subject: `New website enquiry — ${name}`, text: lines.join('\n') };
+  // The reference is in the subject so a row in the admin log can be matched
+  // to the message in your inbox without the log holding anything personal.
+  return { subject: `Enquiry ${ref} — ${name}`, text: lines.join('\n') };
 }
 
-/** Store the fact of an enquiry — never who made it. */
-async function record({ trialSlug = '', delivery, messageId = '', error = '' }) {
+/**
+ * The next enquiry reference.
+ *
+ * Just a count, so references run 1, 2, 3 in the order enquiries arrive. Two
+ * submitted in the same instant could in principle take the same number; at the
+ * volume a recruitment site sees that is not worth a counter document, and a
+ * duplicate reference is a cosmetic problem rather than a lost enquiry.
+ */
+async function nextRef() {
+  const store = await getStore();
+  return (await store.listDocs(DELIVERIES)).length + 1;
+}
+
+/**
+ * Store the fact of an enquiry — never who made it.
+ *
+ * Country is kept: on its own it identifies nobody, and knowing where enquiries
+ * come from is the sort of thing you need without needing to know who wrote.
+ */
+async function record({ ref, country = '', trialSlug = '', delivery, messageId = '', error = '' }) {
   const store = await getStore();
   return store.addDoc(DELIVERIES, {
+    ref,
+    country,
     trialSlug,
     delivery,
     messageId,
@@ -99,7 +121,9 @@ export async function submitEnquiry(enquiry) {
     );
   }
 
-  const { subject, text } = compose(enquiry);
+  const ref = await nextRef();
+  const { subject, text } = compose({ ...enquiry, ref });
+  const stub = { ref, country: enquiry.country, trialSlug: enquiry.trialSlug };
 
   try {
     const sent = await sendMail({
@@ -108,10 +132,10 @@ export async function submitEnquiry(enquiry) {
       subject,
       text,
     });
-    await record({ trialSlug: enquiry.trialSlug, delivery: 'sent', messageId: sent.id });
-    return { delivered: true };
+    await record({ ...stub, delivery: 'sent', messageId: sent.id });
+    return { delivered: true, ref };
   } catch (err) {
-    await record({ trialSlug: enquiry.trialSlug, delivery: 'failed', error: err.message });
+    await record({ ...stub, delivery: 'failed', error: err.message });
     throw Object.assign(
       new Error('Your enquiry could not be sent. Please try again shortly.'),
       { status: 502, expose: true, cause: err },

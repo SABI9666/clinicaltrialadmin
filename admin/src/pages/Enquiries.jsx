@@ -95,8 +95,9 @@ export default function Enquiries({ notify, role }) {
         <div>
           <h1>Enquiries</h1>
           <p className="muted">
-            Contact form messages are emailed to you and never stored here, so this page
-            records only whether each one arrived.
+            Contact form messages are emailed to you and never stored here. Each row is
+            one enquiry — its reference matches the email's subject line, so you can find
+            what was written in your inbox.
           </p>
         </div>
         {stats && (
@@ -190,7 +191,9 @@ export default function Enquiries({ notify, role }) {
         <table className="table">
           <thead>
             <tr>
+              <th>Enquiry</th>
               <th>When</th>
+              <th>Country</th>
               <th>Trial</th>
               <th>Delivery</th>
             </tr>
@@ -198,7 +201,11 @@ export default function Enquiries({ notify, role }) {
           <tbody>
             {items.map((item) => (
               <tr key={item.id}>
+                {/* The same reference is in the email's subject line, so a row
+                    here leads straight to the message in your inbox. */}
+                <td><strong>Enquiry {item.ref ?? '—'}</strong></td>
                 <td>{formatDate(item.createdAt)}</td>
+                <td>{item.country || '—'}</td>
                 <td>{item.trialSlug || '—'}</td>
                 <td>
                   {item.delivery === 'sent' ? (

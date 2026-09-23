@@ -351,8 +351,14 @@ sections. Those are all published through `/api/public/site`, so an inbox kept
 there would sit in a JSON file anyone can read — the same reason a centre's
 address never leaves the server.
 
-What the Enquiries page shows is a delivery log with no personal data in it:
-when, which trial the enquiry named if any, and whether the email got through.
+What the Enquiries page shows is a delivery log: a reference, when it arrived,
+the country given, which trial it named if any, and whether the email got
+through. The reference is also in the email's subject line, so a row here leads
+straight to the message in your inbox.
+
+Country is kept deliberately — a country name on its own identifies nobody, and
+it answers "where are enquiries coming from" without answering "from whom".
+Name, email, phone and the message itself are never written down.
 
 ### Enquiries stored under the old behaviour
 

@@ -278,7 +278,7 @@ describe('enquiries', () => {
 
     const list = await (await api('/api/admin/enquiries', { auth: true })).json();
     const keys = new Set(list.flatMap((r) => Object.keys(r)));
-    for (const key of ['name', 'email', 'phone', 'message', 'country']) {
+    for (const key of ['name', 'email', 'phone', 'message']) {
       assert.equal(keys.has(key), false, `the log must not carry ${key}`);
     }
   });

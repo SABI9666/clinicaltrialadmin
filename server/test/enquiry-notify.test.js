@@ -169,6 +169,8 @@ describe('an enquiry', () => {
     const store = await getStore();
     for (const collection of ['enquiry_deliveries', 'enquiries', 'registrations', 'admin_settings']) {
       const serialised = JSON.stringify(await store.listDocs(collection));
+      // Country is excluded from this sweep: it is kept on purpose, and a
+      // country name points at no one.
       for (const value of ['unique-canary@example.com', 'Canary Person', 'Could you tell me more']) {
         assert.equal(
           serialised.includes(value),
@@ -183,11 +185,15 @@ describe('an enquiry', () => {
     const list = await (await api('/api/admin/enquiries', { auth: true })).json();
     assert.ok(list.length > 0);
 
+    // Country is kept deliberately — on its own it identifies nobody, and it
+    // answers "where are enquiries coming from" without answering "from whom".
+    // Everything that could point at a person stays out.
     const keys = new Set(list.flatMap((r) => Object.keys(r)));
-    for (const key of ['name', 'email', 'phone', 'message', 'country', 'notes']) {
+    for (const key of ['name', 'email', 'phone', 'message', 'notes']) {
       assert.equal(keys.has(key), false, `the log must not carry ${key}`);
     }
     assert.equal(list[0].delivery, 'sent');
+    assert.equal(typeof list[0].ref, 'number', 'each row carries its reference');
   });
 
   test('is refused, not silently dropped, when the send fails', async () => {
