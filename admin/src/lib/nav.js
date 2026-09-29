@@ -107,7 +107,7 @@ export const NAV = [
       {
         label: 'Header & site name',
         target: { kind: 'section', key: 'settings' },
-        hint: 'Brand, top banner, menu links and page metadata',
+        hint: 'Brand, menu links and page metadata',
       },
       { label: 'Footer', target: { kind: 'section', key: 'footer' } },
       {

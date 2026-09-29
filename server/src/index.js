@@ -17,6 +17,9 @@ async function main() {
     for (const [name, count] of Object.entries(created.collections)) {
       console.log(`Seeded ${count} item(s) into "${name}"`);
     }
+    if (created.policiesUpdated.length) {
+      console.log(`Replaced placeholder policies: ${created.policiesUpdated.join(', ')}`);
+    }
   }
 
   const admin = await ensureBootstrapAdmin();

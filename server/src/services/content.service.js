@@ -1,5 +1,5 @@
 import { getStore } from '../db/store.js';
-import { SINGLETONS, COLLECTIONS } from '../seed/content.js';
+import { SINGLETONS, COLLECTIONS, PLACEHOLDER_POLICY_BODY } from '../seed/content.js';
 
 /** Firestore collection holding the singleton section documents. */
 const CONTENT = 'content';
@@ -160,5 +160,35 @@ export async function seedIfEmpty() {
     }
   }
 
+  created.policiesUpdated = await replacePlaceholderPolicies();
   return created;
+}
+
+/** Policies renamed since the placeholders were seeded: old slug → new slug. */
+const RENAMED_POLICIES = { 'terms-of-use': 'legal-notice' };
+
+/**
+ * Swap stored policies still carrying the demo placeholder for the approved
+ * wording. Seeding only fills gaps, so without this a database created before
+ * the wording arrived would keep the placeholder. Anything edited in the admin
+ * no longer matches the placeholder and is left as it is.
+ */
+async function replacePlaceholderPolicies() {
+  const store = await getStore();
+  const updated = [];
+
+  for (const doc of await store.listDocs('policies')) {
+    if (doc.body !== PLACEHOLDER_POLICY_BODY) continue;
+    const slug = RENAMED_POLICIES[doc.slug] ?? doc.slug;
+    const approved = COLLECTIONS.policies.find((p) => p.slug === slug);
+    if (!approved) continue;
+    await store.mergeDoc('policies', doc.id, {
+      slug: approved.slug,
+      title: approved.title,
+      body: approved.body,
+    });
+    updated.push(approved.slug);
+  }
+
+  return updated;
 }
