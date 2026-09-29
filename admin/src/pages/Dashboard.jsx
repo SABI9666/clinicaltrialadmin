@@ -10,7 +10,7 @@ const WHAT_IT_IS = {
   reports: 'Cards under Insights → Reports.',
   faqs: 'Questions under Insights → FAQs.',
   news: 'Updates under Insights → News.',
-  policies: 'Privacy, terms and cookie text in the footer.',
+  policies: 'Privacy, legal notice and cookie text in the footer.',
   centres: 'Recruiting centres, and where their registrations are emailed.',
 };
 

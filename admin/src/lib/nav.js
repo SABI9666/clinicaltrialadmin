@@ -118,7 +118,7 @@ export const NAV = [
       {
         label: 'Policies',
         target: { kind: 'collection', key: 'policies' },
-        hint: 'Privacy, terms and cookie text',
+        hint: 'Privacy, legal notice and cookie text',
       },
       {
         label: 'Users',
