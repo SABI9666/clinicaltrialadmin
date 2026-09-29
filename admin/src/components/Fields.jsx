@@ -3,6 +3,7 @@ import { mediaUrl } from '../lib/api.js';
 import MediaPicker from './MediaPicker.jsx';
 import { OptionPicker, StatePicker } from './TaxonomyField.jsx';
 import CentrePicker from './CentrePicker.jsx';
+import PolicyEditor from './PolicyEditor.jsx';
 
 /* Immutable helpers so edits never mutate the loaded document in place. */
 const replaceAt = (arr, i, v) => arr.map((item, idx) => (idx === i ? v : item));
@@ -270,6 +271,10 @@ export default function Field({ field, value, onChange, ctx }) {
       case 'textarea':
         return (
           <textarea rows={rows ?? 4} value={value ?? ''} onChange={(e) => onChange(e.target.value)} />
+        );
+      case 'policyText':
+        return (
+          <PolicyEditor value={value} onChange={onChange} rows={rows} title={ctx?.record?.title} />
         );
       case 'number':
         return (
