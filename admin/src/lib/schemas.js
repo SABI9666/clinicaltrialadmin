@@ -20,7 +20,7 @@ const cta = (key, label) => ({ key, label, type: 'cta' });
 export const SECTION_SCHEMAS = {
   settings: {
     title: 'Header & site name',
-    blurb: 'Brand name, the strip across the very top, the menu, and the text search engines show.',
+    blurb: 'Brand name, the menu, and the text search engines show.',
     where: 'The header on every page, plus the browser tab title.',
     steps: [
       'Change any text box, then press "Save changes" at the top right.',
@@ -28,8 +28,6 @@ export const SECTION_SCHEMAS = {
       '"Page metadata" is what Google and the browser tab show — keep the title under about 60 characters.',
     ],
     fields: [
-      { key: 'bannerEnabled', label: 'Show top banner', type: 'boolean' },
-      { key: 'banner', label: 'Top banner text', type: 'text' },
       {
         key: 'brand',
         label: 'Brand',
@@ -651,11 +649,12 @@ export const COLLECTION_SCHEMAS = {
   policies: {
     title: 'Policies',
     singular: 'Policy',
-    blurb: 'Privacy, terms and cookie text, opened from the footer links.',
+    blurb: 'Privacy, legal notice and cookie text, opened from the footer links.',
     where: 'The pop-ups behind the footer links at the bottom of every page.',
     steps: [
       'The slug connects a policy to its footer link: a policy with the slug "privacy" opens from the footer link "#privacy".',
       'Separate paragraphs with a blank line.',
+      'Start a line with "## " for a heading and "- " for a list item. Wrap words in **double asterisks** for bold.',
     ],
     titleField: 'title',
     blank: { slug: '', title: '', body: '', published: true },
@@ -673,7 +672,7 @@ export const COLLECTION_SCHEMAS = {
         label: 'Content',
         type: 'textarea',
         rows: 14,
-        hint: 'Separate paragraphs with a blank line.',
+        hint: 'Separate paragraphs with a blank line. "## " starts a heading, "- " a list item, **text** is bold.',
       },
       { key: 'published', label: 'Published — visible on the public site', type: 'boolean' },
     ],

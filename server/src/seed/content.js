@@ -15,11 +15,6 @@ export const MEDIA = {
 };
 
 export const settings = {
-  // The original demo banner said enquiries were not sent. They now reach the
-  // API and appear in the admin inbox, so the copy reflects that. Editable in
-  // the admin, and switch off with bannerEnabled.
-  banner: 'Clinical Trial Access · Information on this site is general in nature',
-  bannerEnabled: true,
   brand: { mark: '✳', name: 'Clinical Trial', suffix: 'ACCESS' },
   nav: [
     { label: 'Access a Trial', href: '#trials' },
@@ -300,28 +295,127 @@ export const footer = {
   copyright: '© 2026 Clinical Trial Access / Southern Star Research Pty Ltd.',
 };
 
+/**
+ * Footer policies. Bodies use a light markup the site renders: a blank line
+ * between paragraphs, "## " for a heading, "- " for a list item and **bold**.
+ */
+const PRIVACY_POLICY = `Clinical Trial Access is operated by Southern Star Research Pty Ltd (“Southern Star Research”, “SSR”, “we”, “us” or “our”).
+
+We respect your privacy and are committed to handling personal information in accordance with applicable Australian privacy requirements, including the Privacy Act 1988 (Cth) and the Australian Privacy Principles.
+
+## Information submitted through Clinical Trial Access
+
+Clinical Trial Access may allow you to submit information to express interest in a clinical trial, make an enquiry or request further information.
+
+Depending on the form you complete, this may include your name, contact details and information relevant to your clinical trial enquiry.
+
+The Clinical Trial Access platform does not retain identifiable information submitted through these forms. Information is securely transmitted to the nominated authorised contact responsible for managing the enquiry. Depending on the nature of your enquiry, this may include clinical study site personnel, an authorised enquiry representative or the designated Privacy Officer.
+
+Southern Star Research does not use information submitted through these forms for unrelated marketing or other purposes.
+
+SSR may retain aggregate, non-identifiable metrics about website and form activity for reporting and service improvement purposes.
+
+## Clinical trial enquiries
+
+Submitting an enquiry through Clinical Trial Access does not mean that you have been accepted into, are eligible for, or will participate in a clinical trial.
+
+The relevant clinical study team or authorised contact will assess your enquiry and, where appropriate, contact you directly regarding potential next steps.
+
+## Website information and analytics
+
+When you visit this website, certain technical information may be processed automatically, such as browser type, device information, pages visited and general website usage information.
+
+We may use cookies and similar technologies to understand how the website is used, maintain website functionality and improve the user experience. Where required, you will be provided with choices about non-essential cookies.
+
+For more information, please see our Cookie Policy.
+
+## Sharing of information
+
+Information submitted through a Clinical Trial Access form will only be transmitted to the authorised recipient or recipients required to manage your enquiry.
+
+Where information may be disclosed to a recipient outside Australia, we will handle that disclosure in accordance with applicable privacy requirements.
+
+## Security
+
+We take reasonable steps to protect personal information handled through Clinical Trial Access from misuse, interference, loss, unauthorised access, modification or disclosure.
+
+## Your privacy rights
+
+If you have questions about how your personal information is handled, would like to make a privacy enquiry or complaint, or would like to exercise any rights available to you under applicable privacy law, please contact Southern Star Research through the contact details provided on this website.
+
+You can also view the Southern Star Research Privacy Policy for further information about our privacy practices.
+
+## Contact us
+
+For privacy-related questions about Clinical Trial Access, please contact:
+
+- **Telephone:** +61 (0)2 9011 6266
+- **Email:** info@SouthernstarResearch.com
+- **Post:** Privacy Officer, Southern Star Research Pty Ltd
+
+*Effective 30 September 2026*`;
+
+const LEGAL_NOTICE = `Clinical Trial Access, part of Southern Star Research Pty Ltd, is operated in accordance with Southern Star Research’s legal requirements and policies.
+
+The Southern Star Research Legal Notice provides information about the use of website content, including copyright and intellectual property. Reproduction, adaptation or translation of website content without prior written permission is prohibited, except where permitted by applicable copyright laws.
+
+By using the Clinical Trial Access website, you acknowledge that the Southern Star Research Legal Notice applies to the content provided on this website.`;
+
+const COOKIE_POLICY = `*Effective 29 September 2026*
+
+## 1. Introduction
+
+This Cookie Policy explains how the Clinical Trial Access website (https://clinicaltrialaccess.org) uses cookies and similar technologies to recognise you when you visit. It explains what these technologies are, why we use them, and your rights to control our use of them.
+
+## 2. What are cookies?
+
+Cookies are small data files that are placed on your computer or mobile device when you visit a website. Cookies are widely used by website owners to make their websites work, or to work more efficiently, as well as to provide reporting information.
+
+- **Session cookies:** temporary cookies that expire when you close your browser.
+- **Persistent cookies:** cookies that remain on your device for a set period or until you delete them manually.
+
+## 3. How we use cookies
+
+Given the nature of our clinical trial website, we prioritise security and user privacy. We use first-party and third-party cookies for several reasons. Some cookies are required for technical reasons in order for our website to operate; we refer to these as “Essential” or “Strictly Necessary” cookies.
+
+We use the following types of cookies:
+
+- **Strictly Necessary cookies:** essential to provide you with the services available through our website and to use its features, such as maintaining security and session integrity. Without these cookies, the services you have asked for cannot be provided.
+- **Performance and Analytics cookies:** collect information that is used in aggregate form to help us understand how our website is being used and how effective it is.
+- **Functionality cookies:** used to recognise you when you return to our website, so that we can remember your preferences (for example, your choice of language or region).
+
+## 4. Third-party cookies
+
+In addition to our own cookies, we may also use third-party cookies to report usage statistics for the website and to ensure the secure delivery of the website’s infrastructure.
+
+## 5. How can you control cookies?
+
+You have the right to decide whether to accept or reject cookies. You can set or amend your web browser controls to accept or refuse cookies. If you choose to reject cookies, you may still use our website, although access to some of its functionality may be restricted.
+
+You can manage cookies in popular browsers as follows:
+
+- **Google Chrome:** Settings > Privacy and security > Cookies and other site data
+- **Mozilla Firefox:** Settings > Privacy & Security > Cookies and Site Data
+- **Apple Safari:** Settings > Privacy > Cookies and website data
+- **Microsoft Edge:** Settings > Cookies and site permissions
+
+## 6. Updates to this Cookie Policy
+
+We may update this Cookie Policy from time to time to reflect, for example, changes to the cookies we use or for other operational, legal or regulatory reasons. Please revisit this Cookie Policy regularly to stay informed about our use of cookies and related technologies.`;
+
+/**
+ * The text every policy carried before approved wording was supplied. A stored
+ * policy still holding exactly this is replaced on start-up; one that has been
+ * edited in the admin is left alone.
+ */
+export const PLACEHOLDER_POLICY_BODY =
+  'Approved policy content has not yet been supplied. This is a website demonstration.';
+
 export const policies = [
-  {
-    slug: 'privacy-policy',
-    title: 'Privacy Policy',
-    body: 'Approved policy content has not yet been supplied. This is a website demonstration.',
-    order: 1,
-    published: true,
-  },
-  {
-    slug: 'terms-of-use',
-    title: 'Terms of Use',
-    body: 'Approved policy content has not yet been supplied. This is a website demonstration.',
-    order: 2,
-    published: true,
-  },
-  {
-    slug: 'cookie-policy',
-    title: 'Cookie Policy',
-    body: 'Approved policy content has not yet been supplied. This is a website demonstration.',
-    order: 3,
-    published: true,
-  },
+  { slug: 'privacy-policy', title: 'Privacy Policy', body: PRIVACY_POLICY, order: 1, published: true },
+  // Formerly "Terms of Use" (slug terms-of-use).
+  { slug: 'legal-notice', title: 'Legal Notice', body: LEGAL_NOTICE, order: 2, published: true },
+  { slug: 'cookie-policy', title: 'Cookie Policy', body: COOKIE_POLICY, order: 3, published: true },
 ];
 
 /**

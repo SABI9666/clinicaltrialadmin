@@ -7,6 +7,9 @@ console.log('Sections seeded:', created.sections.length ? created.sections.join(
 for (const [name, count] of Object.entries(created.collections)) {
   console.log(`  ${name}: ${count} item(s)`);
 }
+if (created.policiesUpdated.length) {
+  console.log('Placeholder policies replaced:', created.policiesUpdated.join(', '));
+}
 const admin = await ensureBootstrapAdmin();
 console.log(admin ? `Bootstrap admin created: ${admin.email}` : 'Bootstrap admin: skipped');
 process.exit(0);
