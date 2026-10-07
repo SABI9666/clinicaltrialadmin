@@ -48,6 +48,17 @@ export const config = {
     localDir: process.env.LOCAL_UPLOAD_DIR ?? 'uploads',
   },
 
+  // Registration emails to recruiting centres. Sent through Resend's HTTP API
+  // because Cloud Run blocks outbound SMTP on the default egress path.
+  mail: {
+    apiKey: process.env.RESEND_API_KEY ?? '',
+    fromAddress: process.env.MAIL_FROM ?? '',
+    fromName: process.env.MAIL_FROM_NAME ?? 'Clinical Trial Access',
+    // Optional blind copy of every registration. Leave unset to keep personal
+    // details out of any mailbox you control.
+    bcc: process.env.MAIL_BCC ?? '',
+  },
+
   bootstrapAdmin: {
     email: process.env.ADMIN_EMAIL ?? '',
     password: process.env.ADMIN_PASSWORD ?? '',

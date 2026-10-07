@@ -8,8 +8,8 @@
 # only set for triggered builds and resolves to an empty string otherwise,
 # which would produce an invalid image tag.
 #
-# Secrets (JWT_SECRET, ADMIN_PASSWORD, DATABASE_URL) are read from Secret
-# Manager at deploy time and never baked into the image.
+# Secrets (JWT_SECRET, ADMIN_PASSWORD, DATABASE_URL, RESEND_API_KEY) are read
+# from Secret Manager at deploy time and never baked into the image.
 #
 # DATABASE_URL must be Neon's POOLED connection string (the host containing
 # "-pooler"): Cloud Run scales to many instances and the direct endpoint would
@@ -24,6 +24,14 @@ substitutions:
   # while the user table is empty; ignored afterwards. Without it no admin is
   # created and nobody can sign in.
   _ADMIN_EMAIL: ''
+  # Sender for registration emails. Must be an address on a domain verified
+  # in Resend — without it nothing is sent and every registration is
+  # recorded as undelivered.
+  _MAIL_FROM: ''
+  _MAIL_FROM_NAME: 'Clinical Trial Access'
+  # MAIL_BCC is deliberately not wired up: a blind copy would put the
+  # personal details of every registration into a mailbox we keep, which is
+  # exactly what not storing registrations is meant to avoid.
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -64,5 +72,9 @@ steps:
       - '--max-instances=10'
       - '--memory=512Mi'
       - '--cpu=1'
-      - '--set-env-vars=NODE_ENV=production,USE_POSTGRES=true,USE_GCS=true,GCP_PROJECT_ID=$PROJECT_ID,GCS_BUCKET=${_GCS_BUCKET},CORS_ORIGINS=${_CORS_ORIGINS},ADMIN_EMAIL=${_ADMIN_EMAIL}'
-      - '--set-secrets=JWT_SECRET=clinical-trial-jwt-secret:latest,ADMIN_PASSWORD=clinical-trial-admin-password:latest,DATABASE_URL=clinical-trial-database-url:latest'
+      # One --set-env-vars flag only: gcloud replaces the value of a repeated
+      # flag rather than merging, so a second would drop everything here. The
+      # leading ^|^ switches the separator off the comma, which CORS_ORIGINS
+      # needs for a list of sites.
+      - '--set-env-vars=^|^NODE_ENV=production|USE_POSTGRES=true|USE_GCS=true|GCP_PROJECT_ID=$PROJECT_ID|GCS_BUCKET=${_GCS_BUCKET}|CORS_ORIGINS=${_CORS_ORIGINS}|ADMIN_EMAIL=${_ADMIN_EMAIL}|MAIL_FROM=${_MAIL_FROM}|MAIL_FROM_NAME=${_MAIL_FROM_NAME}'
+      - '--set-secrets=JWT_SECRET=clinical-trial-jwt-secret:latest,ADMIN_PASSWORD=clinical-trial-admin-password:latest,DATABASE_URL=clinical-trial-database-url:latest,RESEND_API_KEY=clinical-trial-resend-key:latest'

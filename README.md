@@ -81,6 +81,122 @@ missing, rather than falling back to an insecure default.
 
 ---
 
+## Using the admin console
+
+The console explains itself: **How-to guide** in the sidebar is a written
+walkthrough of every routine job, and each editor opens with a "How this page
+works" panel. What follows is the short version for whoever sets it up.
+
+### What the menu means
+
+The sidebar is seven headings; press one to open the pages inside it, and only
+one stays open at a time. Things that are changed together are grouped
+together, whether they are stored as a page section or as a list:
+
+| Heading              | What is inside                                                        |
+| -------------------- | --------------------------------------------------------------------- |
+| **Overview**         | Counts, the four most common jobs, and a link to the guide.           |
+| **How-to guide**     | The written walkthrough of every routine job.                         |
+| **Trials**           | The trials, recruiting centres and their emails, registration deliveries, the options visitors search by, and the search wording. |
+| **Insights & news**  | Reports, FAQs, News, and the headings above those tabs.               |
+| **Home page**        | The rest of the home page, top to bottom.                             |
+| **Enquiries**        | Where contact form messages are emailed, and whether each arrived.    |
+| **Site setup**       | Header, footer, pictures, policies, and (admins only) sign-ins.       |
+
+Menu labels and page titles are deliberately the same words, so "Pictures" in
+the menu opens a page headed "Pictures".
+
+The structure lives in `admin/src/lib/nav.js`; adding a page means adding one
+entry there.
+
+### Trials and the search filters
+
+The public search matches a trial to a filter by exact text: a trial is only
+found under "Diabetes" when its condition **is** `Diabetes`. To make that
+impossible to get wrong, the trial editor offers the site's own filter options
+as dropdowns rather than free-text boxes, sourced from the **Search filters**
+section.
+
+Adding a new option therefore works from either end:
+
+- **While editing a trial** — press "+ Add a new condition" (or country, or
+  state / territory) under the matching dropdown. The option is saved into
+  Search filters straight away and selected for the trial in hand.
+- **From Search filters** — edit all four lists in one place, then Save.
+
+A trial whose stored value is not in the filter list (imported data, or a
+stray trailing space) shows an amber warning under the dropdown with a
+one-press fix that adds the tidied value to the filters and selects it.
+
+Leaving a filter on "Not specified" is deliberate and safe: the API and the
+site both treat an empty value as "not confirmed", so the trial appears
+whatever the visitor searches for rather than being hidden.
+
+### Publishing
+
+Everything in **Content** is either Live or Draft. Untick "Published" in the
+editor, or press the ● / ◯ button beside an entry in the list. ✕ deletes for
+good; a draft is almost always the better choice.
+
+"Reset to default" on a page section restores its original wording and is
+limited to admins, matching the API, which rejects the call for editors.
+
+### Registrations, centres and email
+
+A visitor who opens a trial and presses its button gets a three-step
+registration form: consent, contact details, then the trial's own screening
+questions and a choice of recruiting centre.
+
+**Nothing personal is stored.** The submission is composed into an email to
+the centre the person chose and then dropped — it is never written to the
+database, so the admin console has no personal data to leak, export, or erase
+on request. What *is* stored is a delivery record carrying no personal data at
+all: when, which trial, which centre, and whether the email got through. Without
+it a failed send would vanish silently. It is shown under Trials →
+Registrations.
+
+Who edits what:
+
+| Where | What it controls |
+| ----- | ---------------- |
+| Trials → **Centres & emails** | Each centre or region, and the address its registrations go to. Never exposed on the public API. |
+| Trials → **All trials** → "The registration form" | Which centres recruit for that trial, the consent wording, and the screening questions. |
+| Trials → **Registrations** | The delivery log. Proof it arrived, nothing more. |
+
+The email is addressed **from your own domain**, with the registrant in
+`Reply-To`. It cannot be sent *as* the registrant: their domain's SPF and DKIM
+records do not authorise your server, so such a message is marked as spam or
+rejected. The practical effect is the same — the centre presses Reply and
+reaches the person directly, and the reply never passes through you.
+
+#### Setting up Resend
+
+1. Create an account at [resend.com](https://resend.com), add your sending
+   domain, and add the DNS records it gives you.
+2. Create an API key.
+3. Set `RESEND_API_KEY` and `MAIL_FROM` on the API (see `.env.example`). On
+   Cloud Run these arrive from the `clinical-trial-resend-key` secret and the
+   `_MAIL_FROM` substitution — see the deploy step below.
+
+In production, store the key as a secret rather than a plain env var:
+
+```bash
+printf '%s' "$RESEND_KEY" | \
+  gcloud secrets create clinical-trial-resend-key --data-file=-
+gcloud secrets add-iam-policy-binding clinical-trial-resend-key \
+  --member="serviceAccount:$SA" --role=roles/secretmanager.secretAccessor
+```
+
+With no key set, the flow still runs end to end: the send is logged instead,
+and the Registrations page says plainly that email is not configured, so a
+missing key can never look like a working mailbox.
+
+Sending goes through `server/src/services/mail.service.js`. Every caller uses
+`sendMail`, so moving to another provider means writing one more `deliver`
+function rather than touching the callers.
+
+---
+
 ## Deploying
 
 ### 1. Neon — get the connection string
@@ -144,7 +260,8 @@ SA="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')-co
 gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
   --member="serviceAccount:$SA" --role=roles/storage.objectAdmin
 
-for SECRET in clinical-trial-jwt-secret clinical-trial-admin-password clinical-trial-database-url; do
+for SECRET in clinical-trial-jwt-secret clinical-trial-admin-password \
+  clinical-trial-database-url clinical-trial-resend-key; do
   gcloud secrets add-iam-policy-binding "$SECRET" \
     --member="serviceAccount:$SA" --role=roles/secretmanager.secretAccessor
 done
@@ -154,10 +271,19 @@ done
 
 ```bash
 gcloud builds submit --config server/cloudbuild.yaml \
-  --substitutions=_REGION=$REGION,_GCS_BUCKET=$BUCKET,\
-_ADMIN_EMAIL="you@example.com",\
-_CORS_ORIGINS="https://your-site.vercel.app,https://your-admin.vercel.app"
+  --substitutions='^|^_REGION=australia-southeast1|_GCS_BUCKET=your-bucket|_ADMIN_EMAIL=you@example.com|_MAIL_FROM=registrations@your-domain.org|_CORS_ORIGINS=https://your-site.vercel.app,https://your-admin.vercel.app'
 ```
+
+The leading `^|^` matters. `--substitutions` is itself comma-separated, and
+shell quotes do not protect a comma from gcloud's own parser — with the usual
+commas, a `_CORS_ORIGINS` holding two sites is split into a substitution and a
+fragment, and the build fails on the fragment. `^|^` moves the separator to a
+character the values do not contain.
+
+`_MAIL_FROM` must be an address on the domain you verified in Resend, and the
+`clinical-trial-resend-key` secret must exist before this runs. Without both,
+the API comes up and the registration form still accepts people — every one of
+them is recorded as undelivered and nobody is contacted.
 
 `_ADMIN_EMAIL` and the `clinical-trial-admin-password` secret create your
 sign-in for the admin console. They take effect **only while the user table is
@@ -203,6 +329,47 @@ a strong password and add accounts only for people who need them.
 
 ---
 
+## Contact form enquiries
+
+Enquiries work exactly like registrations: **nothing a person writes is
+stored.** The message is emailed to the address set in the admin under
+**Enquiries** — "Where enquiries are emailed" — with the sender in Reply-To,
+and then discarded. That email is the only copy, so the console holds no
+personal data to leak, export or erase on request.
+
+Because there is no second copy, every failure is reported rather than
+swallowed:
+
+- **No address set** → the form refuses with a 503 and tells the visitor it is
+  temporarily unavailable. Accepting a message with nowhere to put it would
+  lose it silently, so an address is required, not optional.
+- **The send fails** → 502, and the person is asked to try again. They are
+  never thanked for a message that went nowhere.
+
+The address is an admin-only setting rather than one of the site's content
+sections. Those are all published through `/api/public/site`, so an inbox kept
+there would sit in a JSON file anyone can read — the same reason a centre's
+address never leaves the server.
+
+What the Enquiries page shows is a delivery log: a reference, when it arrived,
+the country given, which trial it named if any, and whether the email got
+through. The reference is also in the email's subject line, so a row here leads
+straight to the message in your inbox.
+
+Country is kept deliberately — a country name on its own identifies nobody, and
+it answers "where are enquiries coming from" without answering "from whom".
+Name, email, phone and the message itself are never written down.
+
+### Enquiries stored under the old behaviour
+
+The contact form used to save messages. Any it stored are still in the
+database, and the Enquiries page shows a count of them with a button to delete
+them permanently. Only the count and date range are shown — displaying the
+records would put the personal details back on a screen, which is the thing
+being undone.
+
+---
+
 ## API reference
 
 ### Public (no authentication)
@@ -233,11 +400,13 @@ is not the same as "not eligible".
 | PUT/DELETE | `/api/admin/collections/:collection/:id` | Update / delete    |
 | POST   | `/api/admin/collections/:collection/reorder` | Reorder            |
 | GET/POST | `/api/admin/media`                      | List / upload images   |
-| GET    | `/api/admin/enquiries`                    | Enquiry inbox          |
+| GET    | `/api/admin/enquiries`                    | Enquiry delivery log   |
+| GET/PUT| `/api/admin/enquiries/settings`           | Where enquiries are emailed |
+| GET/DELETE | `/api/admin/enquiries/legacy`         | Count / erase pre-change records |
 | GET/POST | `/api/auth/users`                       | Manage users (admin)   |
 
-Roles: **editor** can change content; **admin** can also manage users, delete
-enquiries and reset sections.
+Roles: **editor** can change content; **admin** can also manage users, set the
+enquiry address, erase pre-change enquiries and reset sections.
 
 ---
 
@@ -251,7 +420,8 @@ Everything visible on the public site:
 - **Content lists** — trials (with their detail dialog), reports, FAQs, news
   and policy documents, each with publish/draft state and ordering.
 - **Images** — upload once, then pick in any section; alt text is editable.
-- **Enquiries** — inbox with status tracking and internal notes.
+- **Enquiries** — the address contact form messages are emailed to, and a
+  delivery log. The messages themselves are never stored.
 - **Users** — add editors and admins, reset passwords.
 
 Each section can be reset to the original content from the supplied design.

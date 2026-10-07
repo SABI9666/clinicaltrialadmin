@@ -1,44 +1,183 @@
+/**
+ * Contact form enquiries.
+ *
+ * Nothing a person types is stored. The enquiry is emailed to the address set
+ * in the admin and then discarded — the console has no enquiry inbox by
+ * design, so there is no database copy of anyone's name, address or message to
+ * leak, export or have to erase on request. This matches how registrations
+ * work; the two forms now hold to the same rule.
+ *
+ * What is recorded is a delivery record carrying no personal data: when, which
+ * trial the enquiry named if any, and whether the email got through. Without it
+ * a lapsed mail key would lose people silently.
+ */
 import { getStore } from '../db/store.js';
+import { mailConfigured, sendMail } from './mail.service.js';
 
-const ENQUIRIES = 'enquiries';
+const DELIVERIES = 'enquiry_deliveries';
 
-export const ENQUIRY_STATUSES = ['new', 'in_progress', 'closed'];
+/**
+ * Enquiries recorded before this became send-only. Nothing writes here any
+ * more; it exists so the personal details captured under the old behaviour can
+ * be found and deleted rather than sitting in the database unnoticed.
+ */
+const LEGACY = 'enquiries';
 
-export async function createEnquiry(data) {
+/**
+ * Where enquiry notifications are sent.
+ *
+ * Deliberately NOT one of the site's content sections: those are all published
+ * through /api/public/site, which would put this inbox in a JSON file anyone
+ * can read and scrape. It lives in an admin-only document instead, reachable
+ * only with a signed-in token — the same reasoning that keeps centre addresses
+ * off the public site.
+ */
+const SETTINGS = 'admin_settings';
+const SETTINGS_ID = 'enquiries';
+
+export async function getEnquirySettings() {
   const store = await getStore();
-  return store.addDoc(ENQUIRIES, { ...data, status: 'new' });
+  const doc = await store.getDoc(SETTINGS, SETTINGS_ID);
+  return { notifyEmail: doc?.notifyEmail ?? '', mailConfigured: mailConfigured() };
 }
 
-export async function listEnquiries({ status } = {}) {
+export async function saveEnquirySettings({ notifyEmail }) {
   const store = await getStore();
-  const all = await store.listDocs(ENQUIRIES);
-  const filtered = status ? all.filter((e) => e.status === status) : all;
-  return filtered.sort((a, b) => String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? '')));
+  await store.setDoc(SETTINGS, SETTINGS_ID, { notifyEmail });
+  return getEnquirySettings();
 }
 
-export async function updateEnquiry(id, { status, notes }) {
-  const store = await getStore();
-  const current = await store.getDoc(ENQUIRIES, id);
-  if (!current) throw Object.assign(new Error('Not found'), { status: 404 });
-  const patch = {};
-  if (status !== undefined) patch.status = status;
-  if (notes !== undefined) patch.notes = notes;
-  return store.mergeDoc(ENQUIRIES, id, patch);
+/** The message whoever handles enquiries receives. */
+function compose({ ref, name, country, email, phone, message, trialSlug }) {
+  const lines = [
+    `A new enquiry has come in through the website. Reference ${ref}.`,
+    '',
+    `Name:    ${name}`,
+    `Email:   ${email}`,
+    `Phone:   ${phone || '—'}`,
+    `Country: ${country}`,
+    ...(trialSlug ? [`Trial:   ${trialSlug}`] : []),
+    '',
+    '--- Message ---',
+    message,
+    '',
+    'Reply to this email to answer them directly — it is addressed to them.',
+    '',
+    'This message is the only copy. Nothing from this enquiry is stored on the',
+    'website or in the admin console.',
+  ];
+  // The reference is in the subject so a row in the admin log can be matched
+  // to the message in your inbox without the log holding anything personal.
+  return { subject: `Enquiry ${ref} — ${name}`, text: lines.join('\n') };
 }
 
-export async function deleteEnquiry(id) {
+/**
+ * The next enquiry reference.
+ *
+ * Just a count, so references run 1, 2, 3 in the order enquiries arrive. Two
+ * submitted in the same instant could in principle take the same number; at the
+ * volume a recruitment site sees that is not worth a counter document, and a
+ * duplicate reference is a cosmetic problem rather than a lost enquiry.
+ */
+async function nextRef() {
   const store = await getStore();
-  const ok = await store.deleteDoc(ENQUIRIES, id);
-  if (!ok) throw Object.assign(new Error('Not found'), { status: 404 });
-  return { id, deleted: true };
+  return (await store.listDocs(DELIVERIES)).length + 1;
+}
+
+/**
+ * Store the fact of an enquiry — never who made it.
+ *
+ * Country is kept: on its own it identifies nobody, and knowing where enquiries
+ * come from is the sort of thing you need without needing to know who wrote.
+ */
+async function record({ ref, country = '', trialSlug = '', delivery, messageId = '', error = '' }) {
+  const store = await getStore();
+  return store.addDoc(DELIVERIES, {
+    ref,
+    country,
+    trialSlug,
+    delivery,
+    messageId,
+    error: error.slice(0, 300),
+  });
+}
+
+/**
+ * Email an enquiry, then record that it happened.
+ *
+ * Every failure path throws rather than swallowing, because the email is the
+ * only copy: telling someone their message was received when it went nowhere
+ * would be the one outcome worse than an error.
+ */
+export async function submitEnquiry(enquiry) {
+  const { notifyEmail } = await getEnquirySettings();
+
+  if (!notifyEmail || !mailConfigured()) {
+    // Nowhere to send it and nowhere to keep it, so say so plainly instead of
+    // accepting a message that would vanish.
+    throw Object.assign(
+      new Error('The enquiry form is temporarily unavailable. Please try again later.'),
+      { status: 503, expose: true },
+    );
+  }
+
+  const ref = await nextRef();
+  const { subject, text } = compose({ ...enquiry, ref });
+  const stub = { ref, country: enquiry.country, trialSlug: enquiry.trialSlug };
+
+  try {
+    const sent = await sendMail({
+      to: notifyEmail,
+      replyTo: enquiry.email,
+      subject,
+      text,
+    });
+    await record({ ...stub, delivery: 'sent', messageId: sent.id });
+    return { delivered: true, ref };
+  } catch (err) {
+    await record({ ...stub, delivery: 'failed', error: err.message });
+    throw Object.assign(
+      new Error('Your enquiry could not be sent. Please try again shortly.'),
+      { status: 502, expose: true, cause: err },
+    );
+  }
+}
+
+export async function listEnquiryDeliveries() {
+  const store = await getStore();
+  const all = await store.listDocs(DELIVERIES);
+  return all.sort((a, b) => String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? '')));
 }
 
 export async function enquiryStats() {
-  const all = await listEnquiries();
+  const all = await listEnquiryDeliveries();
   return {
     total: all.length,
-    new: all.filter((e) => e.status === 'new').length,
-    in_progress: all.filter((e) => e.status === 'in_progress').length,
-    closed: all.filter((e) => e.status === 'closed').length,
+    sent: all.filter((e) => e.delivery === 'sent').length,
+    failed: all.filter((e) => e.delivery === 'failed').length,
+    mailConfigured: mailConfigured(),
   };
+}
+
+/**
+ * How many enquiries from the old behaviour are still held, and from when.
+ *
+ * Only a count and a date range — listing the records themselves would put the
+ * personal details back on a screen, which is the thing being undone.
+ */
+export async function legacyEnquirySummary() {
+  const store = await getStore();
+  const all = await store.listDocs(LEGACY);
+  if (all.length === 0) return { count: 0 };
+
+  const dates = all.map((e) => String(e.createdAt ?? '')).filter(Boolean).sort();
+  return { count: all.length, oldest: dates[0] ?? '', newest: dates.at(-1) ?? '' };
+}
+
+/** Erase every enquiry held from before this became send-only. */
+export async function purgeLegacyEnquiries() {
+  const store = await getStore();
+  const all = await store.listDocs(LEGACY);
+  for (const e of all) await store.deleteDoc(LEGACY, e.id);
+  return { deleted: all.length };
 }

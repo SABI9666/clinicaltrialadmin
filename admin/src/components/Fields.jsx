@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { mediaUrl } from '../lib/api.js';
 import MediaPicker from './MediaPicker.jsx';
+import { OptionPicker, StatePicker } from './TaxonomyField.jsx';
+import CentrePicker from './CentrePicker.jsx';
+import PolicyEditor from './PolicyEditor.jsx';
 
 /* Immutable helpers so edits never mutate the loaded document in place. */
 const replaceAt = (arr, i, v) => arr.map((item, idx) => (idx === i ? v : item));
@@ -65,7 +68,7 @@ function StringList({ value = [], onChange, multiline = false, hint }) {
   );
 }
 
-function ObjectList({ value = [], onChange, fields, itemLabel = 'Item' }) {
+function ObjectList({ value = [], onChange, fields, itemLabel = 'Item', ctx }) {
   const items = Array.isArray(value) ? value : [];
   const blank = Object.fromEntries(fields.map((f) => [f.key, f.type === 'boolean' ? false : '']));
 
@@ -89,6 +92,7 @@ function ObjectList({ value = [], onChange, fields, itemLabel = 'Item' }) {
               <Field
                 key={field.key}
                 field={field}
+                ctx={ctx}
                 value={item?.[field.key]}
                 onChange={(v) => onChange(replaceAt(items, i, { ...item, [field.key]: v }))}
               />
@@ -129,9 +133,10 @@ function CountryList({ value = [], onChange }) {
               />
             </label>
             <div className="field">
-              <span className="field-label">States / territories</span>
+              <span className="field-label">States / territories in this country</span>
               <StringList
                 value={country?.states ?? []}
+                hint={`These appear in the site's "State / territory" dropdown once this country is chosen.`}
                 onChange={(states) => onChange(replaceAt(items, i, { ...country, states }))}
               />
             </div>
@@ -231,17 +236,19 @@ function CtaField({ value = {}, onChange }) {
 
 /* -------------------------------- Field ---------------------------------- */
 
-export default function Field({ field, value, onChange }) {
+export default function Field({ field, value, onChange, ctx }) {
   const { type, label, hint, rows, required } = field;
 
   if (type === 'group') {
     return (
       <fieldset className="group">
         <legend>{label}</legend>
+        {field.blurb && <p className="hint group-blurb">{field.blurb}</p>}
         {field.fields.map((sub) => (
           <Field
             key={sub.key}
             field={sub}
+            ctx={ctx}
             value={value?.[sub.key]}
             onChange={(v) => onChange({ ...(value ?? {}), [sub.key]: v })}
           />
@@ -265,6 +272,10 @@ export default function Field({ field, value, onChange }) {
         return (
           <textarea rows={rows ?? 4} value={value ?? ''} onChange={(e) => onChange(e.target.value)} />
         );
+      case 'policyText':
+        return (
+          <PolicyEditor value={value} onChange={onChange} rows={rows} title={ctx?.record?.title} />
+        );
       case 'number':
         return (
           <input
@@ -279,7 +290,35 @@ export default function Field({ field, value, onChange }) {
         return <StringList value={value} onChange={onChange} multiline hint={hint} />;
       case 'objectList':
         return (
-          <ObjectList value={value} onChange={onChange} fields={field.fields} itemLabel={field.itemLabel} />
+          <ObjectList
+            value={value}
+            onChange={onChange}
+            fields={field.fields}
+            itemLabel={field.itemLabel}
+            ctx={ctx}
+          />
+        );
+      case 'taxonomy':
+        return (
+          <OptionPicker field={field} value={value} onChange={onChange} notify={ctx?.notify} />
+        );
+      case 'centrePicker':
+        return (
+          <CentrePicker
+            value={value}
+            onChange={onChange}
+            notify={ctx?.notify}
+            onNavigate={ctx?.onNavigate}
+          />
+        );
+      case 'taxonomyStates':
+        return (
+          <StatePicker
+            value={value}
+            onChange={onChange}
+            record={ctx?.record}
+            notify={ctx?.notify}
+          />
         );
       case 'countryList':
         return <CountryList value={value} onChange={onChange} />;

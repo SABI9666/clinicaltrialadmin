@@ -18,8 +18,14 @@ export function errorHandler(err, req, res, next) {
 
   const status = err.status ?? 500;
   if (status >= 500) console.error(err);
+
+  // 5xx messages are masked by default so an internal failure cannot leak
+  // stack details or connection strings. `expose` opts a specific error out:
+  // it marks a message written deliberately for the person to read, such as
+  // "your registration could not be sent".
+  const safe = status < 500 || err?.expose === true;
   res.status(status).json({
-    error: status >= 500 ? 'Internal server error' : err.message,
+    error: safe ? err.message : 'Internal server error',
   });
 }
 

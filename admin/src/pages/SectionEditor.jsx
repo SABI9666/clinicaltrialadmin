@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import { SECTION_SCHEMAS } from '../lib/schemas.js';
-import Field from '../components/Fields.jsx';
+import { primeFacets } from '../lib/facets.js';
+import { setDirty } from '../lib/unsaved.js';
+import FieldGroups from '../components/FieldGroups.jsx';
+import HelpPanel from '../components/HelpPanel.jsx';
 
-export default function SectionEditor({ sectionKey, notify }) {
+export default function SectionEditor({ sectionKey, notify, role, onNavigate }) {
   const schema = SECTION_SCHEMAS[sectionKey];
   const [value, setValue] = useState(null);
   const [saved, setSaved] = useState(null);
@@ -29,15 +32,27 @@ export default function SectionEditor({ sectionKey, notify }) {
     };
   }, [sectionKey]);
 
-  const dirty = value && JSON.stringify(value) !== saved;
+  const dirty = Boolean(value) && JSON.stringify(value) !== saved;
+
+  // Tell the shell, so switching pages or closing the tab can warn first.
+  useEffect(() => {
+    setDirty(dirty);
+    return () => setDirty(false);
+  }, [dirty]);
+
+  function store(result) {
+    setValue(result);
+    setSaved(JSON.stringify(result));
+    // The filter lists are cached for the trial editor's dropdowns; edits here
+    // are the one place they change outside it.
+    if (sectionKey === 'facets') primeFacets(result);
+  }
 
   async function save() {
     setBusy(true);
     try {
-      const result = await api.saveSection(sectionKey, value);
-      setValue(result);
-      setSaved(JSON.stringify(result));
-      notify({ type: 'success', message: `${schema.title} saved.` });
+      store(await api.saveSection(sectionKey, value));
+      notify({ type: 'success', message: `${schema.title} saved. The site is updated.` });
     } catch (err) {
       notify({ type: 'error', message: err.message });
     } finally {
@@ -46,13 +61,16 @@ export default function SectionEditor({ sectionKey, notify }) {
   }
 
   async function reset() {
-    if (!confirm(`Reset "${schema.title}" to the original content? Your edits will be lost.`)) return;
+    if (
+      !confirm(
+        `Put "${schema.title}" back to the wording it shipped with? Everything you have written here will be lost, and this cannot be undone.`,
+      )
+    )
+      return;
     setBusy(true);
     try {
-      const result = await api.resetSection(sectionKey);
-      setValue(result);
-      setSaved(JSON.stringify(result));
-      notify({ type: 'success', message: `${schema.title} reset.` });
+      store(await api.resetSection(sectionKey));
+      notify({ type: 'success', message: `${schema.title} reset to the original wording.` });
     } catch (err) {
       notify({ type: 'error', message: err.message });
     } finally {
@@ -71,25 +89,37 @@ export default function SectionEditor({ sectionKey, notify }) {
           <p className="muted">{schema.blurb}</p>
         </div>
         <div className="page-actions">
-          <button type="button" onClick={reset} disabled={busy}>
-            Reset to default
-          </button>
+          {dirty && <span className="dirty-flag">Not saved yet</span>}
+          {role === 'admin' && (
+            <button type="button" onClick={reset} disabled={busy}>
+              Reset to default
+            </button>
+          )}
           <button type="button" className="primary" onClick={save} disabled={busy || !dirty}>
             {busy ? 'Saving…' : dirty ? 'Save changes' : 'Saved'}
           </button>
         </div>
       </header>
 
-      <div className="editor">
-        {schema.fields.map((field) => (
-          <Field
-            key={field.key}
-            field={field}
-            value={value[field.key]}
-            onChange={(v) => setValue((cur) => ({ ...cur, [field.key]: v }))}
-          />
-        ))}
-      </div>
+      <HelpPanel
+        id={`section.${sectionKey}`}
+        steps={schema.steps}
+        where={schema.where}
+        footer={
+          sectionKey === 'facets' && onNavigate ? (
+            <button type="button" onClick={() => onNavigate({ kind: 'collection', key: 'trials' })}>
+              Go to Trials →
+            </button>
+          ) : null
+        }
+      />
+
+      <FieldGroups
+        schema={schema}
+        value={value}
+        ctx={{ notify, record: value }}
+        onChange={(key, v) => setValue((cur) => ({ ...cur, [key]: v }))}
+      />
     </>
   );
 }
