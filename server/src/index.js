@@ -20,6 +20,7 @@ async function main() {
     if (created.policiesUpdated.length) {
       console.log(`Replaced placeholder policies: ${created.policiesUpdated.join(', ')}`);
     }
+    if (created.updates.length) console.log(`Applied content updates: ${created.updates.join(', ')}`);
   }
 
   const admin = await ensureBootstrapAdmin();

@@ -240,11 +240,24 @@ export const SECTION_SCHEMAS = {
     steps: [
       'Submitted enquiries arrive under "Enquiries" in the menu; this page only changes the wording visitors read.',
       'Keep the medical-advice note in place — it tells visitors the site is not medical advice.',
+      'The general enquiries email is shown publicly beside the form as a clickable link. Leave it empty to hide it. Where submitted enquiries are delivered is set separately, under "Enquiries".',
     ],
     fields: [
       { key: 'eyebrow', label: 'Eyebrow', type: 'text' },
       { key: 'title', label: 'Heading', type: 'text' },
       { key: 'paragraphs', label: 'Paragraphs', type: 'textList' },
+      {
+        key: 'generalEmailLabel',
+        label: 'General contact label',
+        type: 'text',
+        hint: 'Shown above the address, e.g. "General enquiries".',
+      },
+      {
+        key: 'generalEmail',
+        label: 'General contact email',
+        type: 'text',
+        hint: 'Shown on the website, e.g. info@southernstarresearch.com.',
+      },
       { key: 'note', label: 'Medical-advice note', type: 'textarea' },
       { key: 'formNote', label: 'Note above the button', type: 'text' },
       { key: 'submitLabel', label: 'Submit button label', type: 'text' },
@@ -576,7 +589,7 @@ export const COLLECTION_SCHEMAS = {
         key: 'region',
         label: 'Region / state',
         type: 'text',
-        hint: 'Shown after the name in the dropdown, e.g. "New South Wales".',
+        hint: 'Centres are grouped under this heading in the dropdown, e.g. "New South Wales".',
       },
       {
         key: 'email',
