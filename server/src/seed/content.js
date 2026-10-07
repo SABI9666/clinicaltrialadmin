@@ -55,7 +55,6 @@ export const heroWide = {
     ...MEDIA.heroWide,
     alt: 'Illustrative consultation between a clinical research coordinator and a participant',
   },
-  caption: 'Supporting informed conversations about clinical trial participation.',
 };
 
 export const trialsSection = {

@@ -98,7 +98,6 @@ export const SECTION_SCHEMAS = {
     steps: ['Pick or upload an image, then describe it in the alt text so screen readers can announce it.'],
     fields: [
       { key: 'image', label: 'Image', type: 'image' },
-      { key: 'caption', label: 'Caption', type: 'text' },
     ],
   },
 
