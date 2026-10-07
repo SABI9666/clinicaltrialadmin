@@ -270,6 +270,8 @@ export const contact = {
     'Have a question about Clinical Trial Access or one of the clinical trials featured on our website? Get in touch with us using the form.',
     'If your enquiry relates to a particular clinical trial, please include the trial or condition name and your country/location so your enquiry can be directed appropriately.',
   ],
+  generalEmailLabel: 'General enquiries',
+  generalEmail: 'info@southernstarresearch.com',
   note: 'Please do not use this form to provide detailed medical information or seek medical advice. For questions about your health or treatment, please speak with your doctor or healthcare professional.',
   formNote: 'Your enquiry is sent to the Clinical Trial Access team.',
   submitLabel: 'Send Enquiry ↗',
@@ -422,22 +424,25 @@ export const policies = [
  * Recruiting centres. Each carries the address a registration for it is
  * emailed to — that address is admin-only and never reaches the public API.
  */
+const centre = (name, region, email, order) => ({ name, region, email, order, published: true });
+
 export const centres = [
-  {
-    name: 'Royal North Shore Hospital',
-    region: 'New South Wales',
-    email: '',
-    order: 1,
-    published: true,
-  },
-  {
-    name: 'Monash House Research Centre',
-    region: 'Victoria',
-    email: '',
-    order: 2,
-    published: true,
-  },
+  centre('Royal North Shore Hospital', 'New South Wales', 'Jean.Doyle@health.nsw.gov.au', 1),
+  centre('John Hunter Hospital', 'New South Wales', 'Ashley.Kite@hmri.org.au', 2),
+  centre('Coffs Harbour Hospital', 'New South Wales', 'amber.carle@health.nsw.gov.au', 3),
+  centre('Mackay Hospital and Health Service', 'Queensland', 'Adessa.Daba@health.qld.gov.au', 4),
+  centre('Mater Hospital', 'Queensland', 'amy.jones@mater.org.au', 5),
+  centre('Monash House Research Centre', 'Victoria', 'research@monashhouse.com.au', 6),
+  centre('The Alfred Bayside', 'Victoria', 'justin.bradley@alfred.org.au', 7),
+  centre('Sir Charles Gairdner Hospital', 'Western Australia', 'Louise.Ferguson@health.wa.gov.au', 8),
+  centre('St John of God', 'Western Australia', 'MI.clinicaltrials@sjog.org.au', 9),
 ];
+
+/**
+ * Where enquiries from the contact form are sent. Admin-only, like the centre
+ * addresses: it is stored outside the public content sections.
+ */
+export const enquirySettings = { notifyEmail: 'info@southernstarresearch.com' };
 
 /** Singleton documents, keyed by their document id in the `content` collection. */
 export const SINGLETONS = {

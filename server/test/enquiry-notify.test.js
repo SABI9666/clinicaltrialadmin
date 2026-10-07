@@ -96,9 +96,9 @@ after(async () => {
 });
 
 describe('the notification address', () => {
-  test('starts empty and reports whether mail is configured', async () => {
+  test('starts at the general inbox and reports whether mail is configured', async () => {
     const s = await (await api('/api/admin/enquiries/settings', { auth: true })).json();
-    assert.equal(s.notifyEmail, '');
+    assert.equal(s.notifyEmail, 'info@southernstarresearch.com');
     assert.equal(s.mailConfigured, true);
   });
 
