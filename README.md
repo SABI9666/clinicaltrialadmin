@@ -292,8 +292,8 @@ either is missing no account is created, and because adding a user needs an
 existing admin token there is no other way in — the API logs a warning at
 startup saying exactly which one is unset.
 
-Note the service URL it prints — both frontends need it as
-`VITE_API_BASE_URL`. Check it came up with:
+Note the service URL it prints — the public site needs it as
+`VITE_API_BASE_URL`, and the admin's `admin/vercel.json` forwards `/api` to it. Check it came up with:
 
 ```bash
 curl https://YOUR-SERVICE-URL/api/health   # {"status":"ok","store":"postgres",...}
@@ -318,10 +318,19 @@ Create a Vercel project from this repository with:
 
 - **Root directory:** `admin`
 - **Framework preset:** Vite
-- **Environment variable:** `VITE_API_BASE_URL` = the Cloud Run URL
-  (optionally `VITE_SITE_URL` = the public site URL, for the "View site" link)
+- **Environment variable (optional):** `VITE_SITE_URL` = the public site URL,
+  for the "View site" link
 
-Then add that admin URL to the API's `CORS_ORIGINS` and redeploy the API.
+The admin calls `/api` on its own address, and `admin/vercel.json` forwards
+those requests to the Cloud Run service. If the service URL ever changes,
+update both rewrites in that file. Because the browser never calls the API
+directly, the admin works on any domain you attach to the Vercel project
+without adding that domain to the API's `CORS_ORIGINS`.
+
+Two consequences of going through Vercel: a request body is capped at about
+4.5 MB, so upload images smaller than that from the admin; and the API sees
+Vercel's addresses rather than each editor's, so the sign-in rate limit (10
+attempts per 15 minutes) is shared between everyone signing in at once.
 
 The admin sends `X-Robots-Tag: noindex` and is not linked from the public site,
 but it is still reachable by URL — access is controlled by the sign-in, so use
