@@ -483,7 +483,7 @@ export const COLLECTION_SCHEMAS = {
             label: 'Sections',
             type: 'textList',
             rows: 9,
-            hint: 'One box per section; each is shown beside a photo. Start it with "## " and the heading, e.g. "## Who may be able to join?". Lines starting "- " become ticked points; leave a blank line between paragraphs. A section headed "## At a glance" becomes highlight cards, one per line written as "- Label | Value | Description", e.g. "- Age range | 18–80 | Participants must be aged between 18 and 80 years."',
+            hint: 'One box per section; each is shown beside a photo. Start it with "## " and the heading, e.g. "## Who may be able to join?". Lines starting "- " become ticked points; leave a blank line between paragraphs. A section whose points are all written "- Title | Description" becomes numbered step cards (e.g. "## What happens if I register interest?"). A section headed "## At a glance" becomes highlight cards, one per line written as "- Label | Value | Description", e.g. "- Age range | 18–80 | Participants must be aged between 18 and 80 years."',
           },
           {
             key: 'note',
