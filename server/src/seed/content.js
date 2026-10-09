@@ -116,10 +116,12 @@ export const trials = [
       eyebrow: 'Clinical trial overview',
       title: 'Diabetic Foot Ulcer Clinical Trial',
       tag: 'INVESTIGATIONAL TREATMENT · CYWC628',
+      // "## " starts a section on the trial page; "- " lines are ticked lists.
       paragraphs: [
-        'This clinical trial is looking at a possible investigational treatment called CYWC628 for diabetic foot ulcers that are hard to heal. The treatment aims to determine whether CYWC628 can support wound healing by promoting tissue regeneration, reducing inflammation, and improving blood flow to the affected area.',
-        'In this clinical trial, researchers will compare standard wound care with standard wound care plus an investigational treatment.',
-        'Site locations, eligible ages, visits and detailed participation requirements were not supplied. These must be confirmed by the research team.',
+        "## What is a clinical trial?\n\n- Clinical trials help doctors and researchers learn whether a treatment is safe and whether it works.\n- Before an investigational treatment can be widely used, it must be studied carefully. Clinical trials follow rules to help protect the people who take part.\n- Taking part is your choice. You can ask questions before you decide.\n- This clinical trial is for people living with diabetic foot ulcers.",
+        "## What is this clinical trial about?\n\n- This clinical trial is looking at a possible investigational treatment called CYWC628 for diabetic foot ulcers that are hard to heal. The treatment aims to determine whether CYWC628 can support wound healing by promoting tissue regeneration, reducing inflammation, and improving blood flow to the affected area.\n- In this clinical trial, researchers will compare standard wound care with standard wound care plus an investigational treatment.\n- The study team wants to learn more about safety and whether the treatment works.",
+        "## What will happen in the clinical trial?\n\nPeople who take part will be placed into study groups. Depending on the group, participants may receive:\n\n- Standard wound care alone\n- Standard wound care plus an investigational treatment\n\nIn total, 120 participants will be enrolled in the study. Of these, 80 participants will receive standard wound care plus an investigational treatment and 40 participants will receive standard wound care only.\n\nThe investigational treatment may be given at different dose levels. The study team will check how the foot ulcer is healing and watch for any side effects.",
+        "## Who may be able to join?\n\nYou may be able to take part if you:\n\n- Are aged 18 to 80\n- Have Type 1 or Type 2 diabetes\n- Have a current diabetic foot ulcer\n- Meet other study requirements checked by the study team\n\nSome people may not be able to take part because of certain health conditions or other study requirements. The study team will check whether the study is suitable for you.",
       ],
       note: 'Registering your interest does not mean you are eligible or enrolled. Eligibility can only be determined by the research team.',
       ctaLabel: 'Enquire about this trial ↗',

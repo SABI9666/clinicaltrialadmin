@@ -310,12 +310,12 @@ export const COLLECTION_SCHEMAS = {
     title: 'Trials',
     singular: 'Trial',
     blurb: 'Every clinical trial listed on the site, and everything a visitor reads about it.',
-    where: 'The result cards under "Find a clinical trial", and the pop-up that opens from "Learn more".',
+    where: 'The result cards under "Find a clinical trial", and the trial\u2019s own page that opens from "Learn more".',
     steps: [
       'Pick a trial on the left to edit it, or press "+ New trial" to add one.',
       'Condition, country, states and age range are dropdowns fed by the Search filter options page — that is how a visitor finds the trial. If the option you need is missing, use the "+ Add a new …" link right there and it is created for you.',
       'Leave a filter as "Not specified" when it is not confirmed yet: the trial then shows up whatever the visitor picks, rather than being hidden.',
-      '"Card paragraphs" are what shows in the list. The "Detail pop-up" panel is what opens when a visitor presses "Learn more".',
+      '"Card paragraphs" are what shows in the list. "The trial page" is the full page that opens when a visitor presses "Learn more", with the registration form at the end.',
       'Nothing is public until you press "Save changes" and the trial is marked Live.',
     ],
     titleField: 'title',
@@ -374,14 +374,14 @@ export const COLLECTION_SCHEMAS = {
         keys: ['tag', 'summary', 'image', 'learnMoreLabel'],
       },
       {
-        title: 'The detail pop-up',
-        blurb: 'What opens when a visitor presses "Learn more" on the card.',
+        title: 'The trial page',
+        blurb: 'The trial\u2019s own page, opened from "Learn more" on the card: the picture and card paragraphs at the top, key facts (condition, age range, location, tag), then the sections below.',
         keys: ['detail'],
       },
       {
         title: 'The registration form',
         blurb:
-          'The three-step form that opens from the pop-up\u2019s button. A completed form is emailed to the centre the visitor picks \u2014 nothing personal is stored here.',
+          'The three-step form shown at the end of the trial page. A completed form is emailed to the centre the visitor picks \u2014 nothing personal is stored here.',
         keys: ['centreIds', 'registration'],
       },
     ],
@@ -466,14 +466,25 @@ export const COLLECTION_SCHEMAS = {
       },
       {
         key: 'detail',
-        label: 'Detail pop-up',
+        label: 'Trial page',
         type: 'group',
         blurb: 'Leave the heading empty to reuse the trial title above.',
         fields: [
           { key: 'eyebrow', label: 'Small line above the heading', type: 'text' },
           { key: 'title', label: 'Heading', type: 'text' },
-          { key: 'tag', label: 'Tag', type: 'text' },
-          { key: 'paragraphs', label: 'Paragraphs', type: 'textList' },
+          {
+            key: 'tag',
+            label: 'Tag',
+            type: 'text',
+            hint: 'Shown under "Treatment" in the key facts, e.g. "Investigational treatment · CYWC628".',
+          },
+          {
+            key: 'paragraphs',
+            label: 'Sections',
+            type: 'textList',
+            rows: 9,
+            hint: 'One box per section. Start it with "## " and the section heading, e.g. "## Who may be able to join?". Lines starting "- " become ticked points; leave a blank line between paragraphs. Text without a heading goes under "About this trial".',
+          },
           {
             key: 'note',
             label: 'Eligibility note',
