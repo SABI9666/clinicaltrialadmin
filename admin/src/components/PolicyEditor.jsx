@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { parseInline, parsePolicy } from '../lib/policyText.js';
 
 /**
- * Editor for long-form policy text (privacy, legal notice, cookies).
+ * Editor for long-form formatted text: policies, reports and FAQ answers.
  *
  * The text is stored as plain text with a light markup, so it stays readable
  * in exports and diffs; the toolbar writes that markup for the editor, and the
