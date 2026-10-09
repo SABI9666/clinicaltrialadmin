@@ -375,13 +375,13 @@ export const COLLECTION_SCHEMAS = {
       },
       {
         title: 'The trial page',
-        blurb: 'The trial\u2019s own page, opened from "Learn more" on the card: the picture and card paragraphs at the top, key facts (condition, age range, location, tag), then the sections below.',
+        blurb: 'The trial\u2019s own page, opened from "Learn more" on the card: the picture and card paragraphs at the top, key facts (condition, age range, location, tag), the registration form, then the sections below it.',
         keys: ['detail'],
       },
       {
         title: 'The registration form',
         blurb:
-          'The three-step form shown at the end of the trial page. A completed form is emailed to the centre the visitor picks \u2014 nothing personal is stored here.',
+          'The three-step form shown on the trial page, under the key facts. A completed form is emailed to the centre the visitor picks \u2014 nothing personal is stored here.',
         keys: ['centreIds', 'registration'],
       },
     ],
@@ -483,7 +483,7 @@ export const COLLECTION_SCHEMAS = {
             label: 'Sections',
             type: 'textList',
             rows: 9,
-            hint: 'One box per section. Start it with "## " and the section heading, e.g. "## Who may be able to join?". Lines starting "- " become ticked points; leave a blank line between paragraphs. Text without a heading goes under "About this trial".',
+            hint: 'One box per section; each is shown beside a photo. Start it with "## " and the heading, e.g. "## Who may be able to join?". Lines starting "- " become ticked points; leave a blank line between paragraphs. A section headed "## At a glance" becomes highlight cards, one per line written as "- Label | Value | Description", e.g. "- Age range | 18–80 | Participants must be aged between 18 and 80 years."',
           },
           {
             key: 'note',
