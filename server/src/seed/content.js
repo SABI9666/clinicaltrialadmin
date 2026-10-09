@@ -16,8 +16,12 @@ export const MEDIA = {
 
 export const settings = {
   brand: { mark: '✳', name: 'Clinical Trial', suffix: 'ACCESS' },
-  // The site opens on the trial search; the rest is reached from the results.
-  nav: [{ label: 'Access a Trial', href: '#trials' }],
+  nav: [
+    { label: 'Access a Trial', href: '#trials' },
+    { label: 'Why Join', href: '#why' },
+    { label: 'Insights', href: '#insights' },
+    { label: 'About Us', href: '#about' },
+  ],
   navCta: { label: 'Contact Us ↗', href: '#contact' },
   seo: {
     title: 'Clinical Trial Access — Updated Website Demo',
