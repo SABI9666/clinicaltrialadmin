@@ -2,7 +2,13 @@
  * Admin API client. Holds the JWT in memory plus sessionStorage, so a page
  * refresh keeps the session but closing the tab ends it.
  */
-const BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+/**
+ * Requests go to /api on the admin's own address. On Vercel, vercel.json
+ * forwards them to the Cloud Run API; locally, the Vite dev server does. The
+ * browser therefore never makes a cross-origin call, so the admin works on any
+ * domain it is served from without that domain being in the API's CORS_ORIGINS.
+ */
+const BASE = '';
 const TOKEN_KEY = 'cta.admin.token';
 
 let token = null;
