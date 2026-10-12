@@ -104,7 +104,7 @@ export const SECTION_SCHEMAS = {
   trialsSection: {
     title: 'Trial search wording',
     blurb: 'The wording around the trial search box. The trials themselves live under Trials → All trials.',
-    where: 'The "Find a clinical trial" block on the home page.',
+    where: 'The "Find a clinical trial" search and the "Clinical trials currently recruiting" heading on the home page.',
     steps: [
       'This page only changes words, never which trials are listed.',
       'To add or edit a trial, go to Trials → All trials. To change what the dropdowns offer, go to Trials → Search filter options.',
@@ -115,6 +115,8 @@ export const SECTION_SCHEMAS = {
       { key: 'title', label: 'Heading', type: 'text' },
       { key: 'intro', label: 'Intro', type: 'textarea' },
       { key: 'aside', label: 'Aside text', type: 'text' },
+      { key: 'recruitingTitle', label: 'Currently recruiting heading', type: 'text' },
+      { key: 'recruitingIntro', label: 'Currently recruiting intro', type: 'textarea' },
       { key: 'searchLabel', label: 'Search button label', type: 'text' },
       { key: 'disclaimer', label: 'Disclaimer', type: 'textarea' },
       { key: 'emptyTitle', label: 'No-results heading', type: 'text' },
@@ -483,7 +485,7 @@ export const COLLECTION_SCHEMAS = {
             label: 'Sections',
             type: 'textList',
             rows: 9,
-            hint: 'One box per section; each is shown beside a photo. Start it with "## " and the heading, e.g. "## Who may be able to join?". Lines starting "- " become ticked points; leave a blank line between paragraphs. A section whose points are all written "- Title | Description" becomes numbered step cards (e.g. "## What happens if I register interest?"). A section headed "## At a glance" becomes highlight cards, one per line written as "- Label | Value | Description", e.g. "- Age range | 18–80 | Participants must be aged between 18 and 80 years."',
+            hint: 'One box per section; each is shown beside a photo. Start it with "## " and the heading, e.g. "## Who may be able to join?". Lines starting "- " become ticked points; leave a blank line between paragraphs. A section whose points are all written "- Title | Description" becomes numbered step cards (e.g. "## What happens if I register interest?"). A section headed "## At a glance" becomes highlight cards, one per line written as "- Label | Value | Description", e.g. "- Age range | 18–80 | Participants must be aged between 18 and 80 years." A section headed "## Study sites" becomes contact cards, one per line written as "- Name | Location | Site coordinator | Phone | Email" (leave a part empty if unknown).',
           },
           {
             key: 'note',

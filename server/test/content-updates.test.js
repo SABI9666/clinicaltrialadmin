@@ -38,6 +38,13 @@ describe('content updates on an existing database', () => {
       email: 'kept@example.org',
       order: 2,
     });
+    // A centre stored under the name it had before 12 Oct 2026.
+    await store.addDoc('centres', {
+      name: 'Mater Hospital',
+      region: 'Queensland',
+      email: 'kept-mater@example.org',
+      order: 5,
+    });
     await store.setDoc('content', 'contact', { title: 'Have a question?' });
   });
 
@@ -45,13 +52,19 @@ describe('content updates on an existing database', () => {
 
   test('adds the missing centres and fills empty addresses only', async () => {
     const created = await seedIfEmpty();
-    assert.deepEqual(created.updates, ['centres-2026-10', 'general-contact-2026-10']);
+    assert.deepEqual(created.updates, ['centre-names-2026-10', 'centres-2026-10', 'general-contact-2026-10']);
 
     const c = await byName();
     assert.equal(Object.keys(c).length, SEED_CENTRES.length);
     assert.equal(c['Royal North Shore Hospital'].email, 'Jean.Doyle@health.nsw.gov.au');
     assert.equal(c['Monash House Research Centre'].email, 'kept@example.org');
-    assert.equal(c['The Alfred Bayside'].email, 'justin.bradley@alfred.org.au');
+    assert.equal(c['Bayside Health, Alfred Care Group'].email, 'justin.bradley@alfred.org.au');
+  });
+
+  test('renames centres to the confirmed site names, keeping their details', async () => {
+    const c = await byName();
+    assert.equal(c['Mater Hospital'], undefined);
+    assert.equal(c['Mater Misericordiae Ltd (MML)'].email, 'kept-mater@example.org');
   });
 
   test('keeps centre addresses off the public list', async () => {
@@ -66,10 +79,10 @@ describe('content updates on an existing database', () => {
   });
 
   test('runs once: a centre deleted in the admin stays deleted', async () => {
-    const alfred = (await byName())['The Alfred Bayside'];
+    const alfred = (await byName())['Bayside Health, Alfred Care Group'];
     await store.deleteDoc('centres', alfred.id);
     const created = await seedIfEmpty();
     assert.deepEqual(created.updates, []);
-    assert.equal((await byName())['The Alfred Bayside'], undefined);
+    assert.equal((await byName())['Bayside Health, Alfred Care Group'], undefined);
   });
 });

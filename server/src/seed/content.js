@@ -34,11 +34,11 @@ export const hero = {
   titleLines: ['Helping you access', 'clinical trials.'],
   paragraphs: [
     'Clinical trials help researchers explore potential new treatments and improve our understanding of different health conditions.',
-    'We connect people interested in participating in clinical trials with research sites across Australia and Asia.',
+    'Clinical Trial Access helps connect people interested in participating in clinical trials with research sites conducting trials across Australia and Asia.',
+    "Whether you are exploring clinical trials for yourself, a family member or someone you care for, we're here to make it easier to understand what clinical trial participation involves and find opportunities that may be suitable for you.",
   ],
   primaryCta: { label: 'Access a Trial', href: '#trials', icon: '↗' },
-  secondaryCta: { label: 'Learn About Clinical Trials', href: '#journey' },
-  footnote: 'For you, a family member or someone you care for.',
+  secondaryCta: { label: 'Learn About Clinical Trials', href: '#why' },
   image: {
     ...MEDIA.heroConsult,
     alt: 'Illustrative image of a research coordinator speaking with an older adult',
@@ -63,6 +63,8 @@ export const trialsSection = {
   intro:
     'Search current opportunities by condition and location to find a clinical trial that may be relevant to you.',
   aside: 'Explore • Learn • Connect',
+  recruitingTitle: 'Clinical trials currently recruiting',
+  recruitingIntro: 'Explore clinical trials currently looking for participants across Australia and Asia.',
   disclaimer:
     'Trial locations, age criteria and recruitment status require confirmation by the research team.',
   emptyTitle: 'No matching trials',
@@ -104,8 +106,8 @@ export const trials = [
     published: true,
     order: 1,
     summary: [
-      'This clinical trial is looking at a possible investigational treatment called CYWC628 for diabetic foot ulcers that are hard to heal.',
-      'Researchers will compare standard wound care with standard wound care plus an investigational treatment.',
+      'This clinical trial is looking at a possible investigational treatment called CYWC628 for diabetic foot ulcers that are hard to heal. The treatment aims to determine whether CYWC628 can support wound healing by promoting tissue regeneration, reducing inflammation, and improving blood flow to the affected area.',
+      'In this clinical trial, researchers will compare standard wound care with standard wound care plus an investigational treatment.',
     ],
     image: {
       ...MEDIA.trialDiabetes,
@@ -123,6 +125,7 @@ export const trials = [
         "## What will happen in the clinical trial?\n\nPeople who take part will be placed into study groups. Depending on the group, participants may receive:\n\n- Standard wound care alone\n- Standard wound care plus an investigational treatment\n\nIn total, 120 participants will be enrolled in the study. Of these, 80 participants will receive standard wound care plus an investigational treatment and 40 participants will receive standard wound care only.\n\nThe investigational treatment may be given at different dose levels. The study team will check how the foot ulcer is healing and watch for any side effects.",
         "## Who may be able to join?\n\nYou may be able to take part if you:\n\n- Are aged 18 to 80\n- Have Type 1 or Type 2 diabetes\n- Have a current diabetic foot ulcer\n- Meet other study requirements checked by the study team\n\nSome people may not be able to take part because of certain health conditions or other study requirements. The study team will check whether the study is suitable for you.",
         "## What happens if I register interest?\n\n- Register your interest | You share your contact details and answer a few questions.\n- Speak with the study team | A study team member will contact you, explain the study, and ask more questions.\n- Check eligibility | The study team will check whether the clinical trial is right for you.\n- Decide what to do next | You can ask questions before deciding. Taking part is your choice.",
+        "## Study sites\n\nThis clinical trial is being conducted at the following research sites. You can contact a site coordinator with any questions about the trial.\n\n- Royal North Shore Hospital | NSW | Jean Doyle | 02 9463 1488 | Jean.Doyle@health.nsw.gov.au\n- Mackay Hospital and Health Service | QLD | Adessa Daba | 07 4885 6788 | Adessa.Daba@health.qld.gov.au\n- Mater Misericordiae Ltd (MML) | QLD | Amy Jones | 0403 454 038 | amy.jones@mater.org.au\n- Monash House Research Centre | VIC | Amber Shead | 03 9595 6174 | AShead@monashhouse.com.au\n- Sir Charles Gairdner Hospital | WA | Louise Ferguson | 0419 966 145 | Louise.Ferguson@health.wa.gov.au\n- Coffs Harbour Health Campus | Coffs Harbour, NSW | Amber Carle | | amber.carle@health.nsw.gov.au\n- John Hunter Hospital | Newcastle NSW | Angus Niven | | Angus.Niven@hmri.org.au\n- St John of God Midland Public Hospital | Western Australia | | | MI.clinicaltrials@sjog.org.au\n- Bayside Health, Alfred Care Group | Victoria | | |",
         "## At a glance\n\n- Age range | 18–80 | Participants must be aged between 18 and 80 years.\n- Diabetes type | 1/2 | People with Type 1 or Type 2 diabetes may be considered.\n- Current foot ulcer | DFU | You must currently have a diabetic foot ulcer.\n- Other requirements | ✓ | The study team will check all other eligibility criteria.",
       ],
       note: 'Registering your interest does not mean you are eligible or enrolled. Eligibility can only be determined by the research team.',
@@ -134,7 +137,7 @@ export const trials = [
 ];
 
 export const journey = {
-  eyebrow: 'Finding a clinical trial',
+  eyebrow: 'How it works',
   title: 'Finding a clinical trial',
   intro: 'We want to make exploring clinical trials as straightforward as possible.',
   steps: [
@@ -150,18 +153,18 @@ export const journey = {
     },
     {
       number: '03',
-      title: 'Connect',
-      body: 'Your information will be securely provided to the research site conducting the trial. The site team may contact you to discuss the trial and ask initial questions.',
+      title: 'Connect with the research site',
+      body: 'Your information will be securely provided to the research site conducting the clinical trial. A member of the site team may contact you to discuss the trial and ask some initial questions.',
     },
     {
       number: '04',
       title: 'Learn more',
-      body: 'The research site will explain visits, assessments, potential risks and potential benefits if the trial may be suitable for you.',
+      body: 'If the trial may be suitable for you, the research site will explain what participation involves, including trial visits, assessments, potential risks and potential benefits.',
     },
     {
       number: '05',
       title: 'Decide',
-      body: 'Taking part is your choice. You can ask questions before deciding whether you would like to participate.',
+      body: 'Taking part is your choice. You will have the opportunity to ask questions before deciding whether you would like to participate.',
     },
   ],
   note: 'Registering your interest does not mean you are eligible or enrolled in a clinical trial. Eligibility can only be determined by the research team responsible for the trial.',
@@ -432,13 +435,13 @@ const centre = (name, region, email, order) => ({ name, region, email, order, pu
 export const centres = [
   centre('Royal North Shore Hospital', 'New South Wales', 'Jean.Doyle@health.nsw.gov.au', 1),
   centre('John Hunter Hospital', 'New South Wales', 'Ashley.Kite@hmri.org.au', 2),
-  centre('Coffs Harbour Hospital', 'New South Wales', 'amber.carle@health.nsw.gov.au', 3),
+  centre('Coffs Harbour Health Campus', 'New South Wales', 'amber.carle@health.nsw.gov.au', 3),
   centre('Mackay Hospital and Health Service', 'Queensland', 'Adessa.Daba@health.qld.gov.au', 4),
-  centre('Mater Hospital', 'Queensland', 'amy.jones@mater.org.au', 5),
+  centre('Mater Misericordiae Ltd (MML)', 'Queensland', 'amy.jones@mater.org.au', 5),
   centre('Monash House Research Centre', 'Victoria', 'research@monashhouse.com.au', 6),
-  centre('The Alfred Bayside', 'Victoria', 'justin.bradley@alfred.org.au', 7),
+  centre('Bayside Health, Alfred Care Group', 'Victoria', 'justin.bradley@alfred.org.au', 7),
   centre('Sir Charles Gairdner Hospital', 'Western Australia', 'Louise.Ferguson@health.wa.gov.au', 8),
-  centre('St John of God', 'Western Australia', 'MI.clinicaltrials@sjog.org.au', 9),
+  centre('St John of God Midland Public Hospital', 'Western Australia', 'MI.clinicaltrials@sjog.org.au', 9),
 ];
 
 /**

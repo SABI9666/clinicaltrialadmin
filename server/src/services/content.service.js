@@ -208,7 +208,28 @@ async function replacePlaceholderPolicies() {
 const ADMIN_SETTINGS = 'admin_settings';
 const APPLIED = 'content-updates';
 
+const CENTRE_RENAMES = [
+  ['Coffs Harbour Hospital', 'Coffs Harbour Health Campus'],
+  ['Mater Hospital', 'Mater Misericordiae Ltd (MML)'],
+  ['The Alfred Bayside', 'Bayside Health, Alfred Care Group'],
+  ['St John of God', 'St John of God Midland Public Hospital'],
+];
+
 const CONTENT_UPDATES = {
+  /**
+   * The site names the client confirmed on 12 Oct 2026. Runs before the site
+   * list below so a renamed centre is not added a second time.
+   */
+  'centre-names-2026-10': async (store) => {
+    const key = (name) => String(name ?? '').trim().toLowerCase();
+    const stored = await store.listDocs('centres');
+    const names = new Set(stored.map((c) => key(c.name)));
+    for (const [from, to] of CENTRE_RENAMES) {
+      const current = stored.find((c) => key(c.name) === key(from));
+      if (current && !names.has(key(to))) await store.mergeDoc('centres', current.id, { name: to });
+    }
+  },
+
   /** The recruiting site list and each site's registration address. */
   'centres-2026-10': async (store) => {
     const key = (name) => String(name ?? '').trim().toLowerCase();
