@@ -26,7 +26,7 @@ export const GUIDE = [
     id: 'trials',
     title: 'Add or update a trial',
     intro:
-      'Trials are the heart of the site. Each one is a card in the search results plus a pop-up with the full description.',
+      'Trials are the heart of the site. Each one is a card in the search results plus its own page with the full description and the registration form.',
     goto: { kind: 'collection', key: 'trials' },
     gotoLabel: 'Open Trials',
     steps: [
@@ -35,7 +35,7 @@ export const GUIDE = [
       'Fill in "The basics": the trial title, and whether it is published. The web address name fills itself in from the title.',
       'In "How visitors find it", choose the condition, country, states/territories and age range from the dropdowns. These are what the search on the website filters by.',
       'In "The card in the list", write the short paragraphs visitors read in the results, and choose a picture.',
-      'In "The detail pop-up", write the full description that opens when a visitor presses "Learn more".',
+      'In "The trial page", write the sections visitors read when they press "Learn more". Start each section with "## " and its heading; lines starting "- " become ticked points.',
       'Press "Save changes" (or "Create trial"). The trial appears on the site as soon as it is saved and marked Live.',
     ],
     note:

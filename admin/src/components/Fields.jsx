@@ -39,7 +39,7 @@ function RowControls({ index, length, onMove, onRemove }) {
 
 /* ------------------------------ list fields ------------------------------ */
 
-function StringList({ value = [], onChange, multiline = false, hint }) {
+function StringList({ value = [], onChange, multiline = false, hint, rows }) {
   const items = Array.isArray(value) ? value : [];
   const Input = multiline ? 'textarea' : 'input';
 
@@ -50,7 +50,7 @@ function StringList({ value = [], onChange, multiline = false, hint }) {
         <div className="list-row" key={i}>
           <Input
             value={item ?? ''}
-            rows={multiline ? 3 : undefined}
+            rows={multiline ? (rows ?? 3) : undefined}
             onChange={(e) => onChange(replaceAt(items, i, e.target.value))}
           />
           <RowControls
@@ -287,7 +287,7 @@ export default function Field({ field, value, onChange, ctx }) {
       case 'stringList':
         return <StringList value={value} onChange={onChange} hint={hint} />;
       case 'textList':
-        return <StringList value={value} onChange={onChange} multiline hint={hint} />;
+        return <StringList value={value} onChange={onChange} multiline hint={hint} rows={rows} />;
       case 'objectList':
         return (
           <ObjectList
